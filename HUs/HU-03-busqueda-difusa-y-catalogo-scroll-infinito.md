@@ -10,7 +10,7 @@ Para encontrar rápidamente productos con su información esencial (foto, compon
 - **Requerimientos Funcionales asociados:**
   - RF-02.1 (*El motor de búsqueda implementará Fuzzy Search y renderizará los resultados de arriba a abajo en una sola lista sin paginación — scroll infinito*).
   - RF-02.2 (*La tarjeta del producto en la lista presentará de forma obligatoria: foto, nombre, componentes, precio, porcentaje de descuento por oferta [si aplica], alerta de stock bajo [< 6 unidades] o etiqueta de "Precios bajos", y el botón "Agregar al carrito"*).
-- **Criterios de éxito y RNF asociados:** RNF-01 (*Concurrencia de hasta 250 clientes y tiempo de respuesta <= 2.5s para búsquedas en el catálogo*), Criterio de éxito 1 (*Disminución del 30% en el volumen de atención manual para consultas de stock y cotizaciones*).
+- **Criterios de éxito y RNF asociados:** RNF-01 (*Concurrencia de hasta 250 clientes y tiempo de respuesta <= 2.5s para búsquedas en el catálogo*), Criterio de éxito — Eficiencia Operativa (*Disminución del 30% en el volumen de atención manual para consultas de stock y cotizaciones según Sección 8 del PRD*).
 - **Cobertura:** Motor de búsqueda con tolerancia a errores de tipeo en nombres y principios activos, renderizado continuo vertical con carga dinámica (scroll infinito sin botones de paginación), tarjeta de producto estandarizada con todos sus campos obligatorios y botón de adición directa al carrito.
 
 ## Criterios de aceptación funcionales
@@ -54,6 +54,9 @@ Feature: Búsqueda y catálogo en scroll infinito
     Then la tarjeta del producto despliega obligatoriamente una alerta visual destacada indicando "Últimas unidades disponibles (menos de 6 en stock)"
     And muestra el botón "Agregar al carrito" habilitado para la compra de las existencias restantes
 ```
+
+## Supuestos
+- **Alcance del motor difuso:** Se asume que el algoritmo de búsqueda difusa (*Fuzzy Search*) indexa y compara tanto el nombre comercial del medicamento como sus componentes (principios activos), asegurando la localización del producto aún ante errores de tipeo.
 
 ## Puntos Abiertos
 - **PA-02 — Etiqueta "Precios bajos":** ¿Qué criterio activa la etiqueta "Precios bajos" en un producto?  

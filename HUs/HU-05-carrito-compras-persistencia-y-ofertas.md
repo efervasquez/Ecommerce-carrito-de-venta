@@ -8,7 +8,7 @@ Para no perder mi selección mientras navego y aprovechar de forma clara las pro
 ## Alcance específico de la HU
 - **Sección del PRD:** 3. Alcance (3.1 Lo que INCLUYE — Carrito de Compras con Persistencia e Interfaz Orientada a Ofertas), 4. Personas y Actores (Cliente Final), 5. Requerimientos Funcionales (RF-03: Automatización OCR y Carrito de Compras — RF-03.3).
 - **Requerimientos Funcionales asociados:** RF-03.3 (*El sistema ordenará la interfaz del carrito de compras colocando todos los productos que tengan ofertas activas en la sección superior inicial de la pantalla. Selección y reserva de productos ligada estrictamente a la duración de la sesión del cliente*).
-- **Criterios de éxito y RNF asociados:** RNF-01 (*Tiempo de respuesta <= 2.5s en procesamiento de carritos bajo carga sostenida de 250 clientes concurrentes*), AGENTS.md (*Optimización de recursos y pool de conexiones en MySQL; tareas programadas de ciclo de vida para carritos*).
+- **Criterios de éxito y RNF asociados:** RNF-01 (*Tiempo de respuesta <= 2.5s en procesamiento de carritos bajo carga sostenida de 250 clientes concurrentes*), Criterio de éxito — Penetración Digital (*Al menos el 25% de la facturación global proveniente del canal de ventas web según Sección 8 del PRD*), AGENTS.md (*Optimización de recursos y pool de conexiones en MySQL; tareas programadas de ciclo de vida para carritos*).
 - **Cobertura:** Almacenamiento y persistencia del estado del carrito ligado al token/sesión del cliente, ordenamiento obligatorio de la interfaz con bloque superior prioritario para productos con ofertas, sección secundaria para productos regulares, actualización interactiva de cantidades, cálculo de totales y reserva temporal de inventario.
 
 ## Criterios de aceptación funcionales
@@ -53,6 +53,9 @@ Feature: Carrito de compras con persistencia y ofertas
     And mantiene la cantidad en 4 unidades
     And muestra un mensaje de advertencia indicando "Stock máximo disponible alcanzado (4 unidades)"
 ```
+
+## Supuestos
+- **Mecanismo de reserva temporal:** Se asume que mientras no se resuelva PA-01, la reserva temporal de stock opera asociada al identificador de sesión activa del cliente mediante transacciones atómicas a nivel de base de datos para prevenir sobreventa concurrente.
 
 ## Puntos Abiertos
 - **PA-01 — Reserva de stock:** ¿Cuál es la duración exacta de la sesión/reserva de stock y la regla de liberación automática (inactividad, abandono o timeout)?  

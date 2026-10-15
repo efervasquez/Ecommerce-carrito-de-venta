@@ -8,7 +8,7 @@ Para acceder rápidamente al e-commerce, mantener mi sesión reconocida y gestio
 ## Alcance específico de la HU
 - **Sección del PRD:** 3. Alcance (3.1 Lo que INCLUYE — Módulo de Autoregistro, Autenticación y Recuperación), 4. Personas y Actores (Cliente Final), 5. Requerimientos Funcionales (RF-01: Módulo de Gestión de Usuarios y Accesos — RF-01.1).
 - **Requerimientos Funcionales asociados:** RF-01.1 (*El sistema permitirá el autoregistro rápido ingresando únicamente el correo electrónico, enviando una contraseña provisional de manera automatizada*).
-- **Criterios de éxito y RNF asociados:** RNF-02 (*Seguridad y Privacidad de Datos / LPDP Perú, generación y almacenamiento cifrado de credenciales*), RNF-03 (*Disponibilidad 24/7 con objetivo mínimo de 99.5%*), Supuesto 3 (*Servidor SMTP con capacidad de despacho inmediato sin encolamientos*).
+- **Criterios de éxito y RNF asociados:** RNF-02 (*Seguridad y Privacidad de Datos / LPDP Perú, generación y almacenamiento cifrado de credenciales*), RNF-03 (*Disponibilidad 24/7 con objetivo mínimo de 99.5%*), Criterio de éxito — Estabilidad del Sistema (*Disponibilidad mínima del 99.5% 24/7 según Sección 8 del PRD*), Supuesto 3 (*Servidor SMTP con capacidad de despacho inmediato sin encolamientos*).
 - **Cobertura:** Formulario web de autoregistro con campo único de correo electrónico, generación aleatoria y segura de contraseña provisional por el backend, despacho inmediato por correo electrónico, autenticación de usuario y control de sesión activa persistente con rol de Cliente Final (RBAC).
 
 ## Criterios de aceptación funcionales
@@ -46,6 +46,9 @@ Feature: Autoregistro de clientes
     And no genera ninguna contraseña provisional ni registra un nuevo usuario
     And resalta el campo de texto con un mensaje indicando que el formato del correo es inválido
 ```
+
+## Supuestos
+- **Validación y unicidad de correo:** Se asume como regla funcional y técnica estándar (derivada de RNF-02, LPDP y seguridad de cuentas en AGENTS.md) que el correo electrónico debe validar formato RFC y unicidad en la base de datos para evitar colisiones de cuentas y garantizar la entrega efectiva de la contraseña provisional.
 
 ## Puntos Abiertos
 - Sin puntos abiertos pendientes en este requerimiento. Todas las definiciones funcionales se encuentran confirmadas en el PRD (RF-01.1).

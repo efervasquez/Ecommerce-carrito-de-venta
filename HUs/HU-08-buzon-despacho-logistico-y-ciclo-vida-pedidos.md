@@ -11,7 +11,7 @@ Para optimizar los tiempos de entrega de medicamentos, ordenar las salidas de lo
   - RF-07.1 (*El sistema centralizará las órdenes confirmadas y consolidará las rutas de despacho por cercanía geográfica de zona*).
   - RF-07.2 (*El sistema asignará los pedidos a motorizados por orden de llegada o mediante auto-asignación manual*).
   - RF-07.3 (*El ciclo de vida del pedido estará controlado por 4 estados obligatorios: Registrado, Preparando producto, En camino y Entregado*).
-- **Criterios de éxito y RNF asociados:** RNF-01 (*Rendimiento óptimo bajo concurrencia operativa en Backoffice*), Criterio de éxito 1 (*Disminución del 30% en carga operativa manual y agilización de entregas*), AGENTS.md (*Arquitectura orientada a eventos EDA y trazabilidad estructurada de cambios de estado*).
+- **Criterios de éxito y RNF asociados:** RNF-01 (*Rendimiento óptimo bajo concurrencia operativa en Backoffice*), Criterio de éxito — Eficiencia Operativa (*Disminución del 30% en el volumen de atención manual y carga operativa según Sección 8 del PRD*), AGENTS.md (*Arquitectura orientada a eventos EDA y trazabilidad estructurada de cambios de estado*).
 - **Cobertura:** Bandeja centralizada de pedidos en el Backoffice, agrupación y filtrado por cercanía geográfica / zonas de reparto, asignación de pedidos a motorizados propios (por orden de llegada o auto-asignación), y control estricto de la máquina de estados con las 4 transiciones obligatorias.
 
 ## Criterios de aceptación funcionales
@@ -59,6 +59,9 @@ Feature: Buzón de despacho logístico y ciclo de vida de pedidos
     And emite un error de validación indicando "Transición de estado inválida: el pedido debe pasar primero por 'Preparando producto' y 'En camino'"
     And mantiene el pedido en estado "Registrado"
 ```
+
+## Supuestos
+- **Consolidación por distritos y zonas:** Se asume que la consolidación por cercanía geográfica opera agrupando los pedidos confirmados por sectores, distritos o zonas de cobertura de la botica para facilitar el armado de hojas de ruta de los motorizados.
 
 ## Puntos Abiertos
 - **PA-04 — Reclamos en el ciclo de vida:** ¿El flujo de reclamos por mal estado debe reflejarse con uno o más estados adicionales en el ciclo de vida del pedido (por ejemplo: *En reclamo*, *Reemplazo en camino*), o se gestiona como un sub-flujo independiente posterior al estado `Entregado`?  

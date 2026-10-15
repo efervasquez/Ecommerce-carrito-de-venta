@@ -1,0 +1,38 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Ciclo de vida del pedido — Botica la Luz",
+    "locale": "es",
+    "output": "adrs/Diagramas/lifecycle/ciclo-pedido.html",
+    "quality_profile": "showcase"
+  },
+  "mainPath": ["registrado", "preparando", "en_camino", "entregado"],
+  "states": [
+    { "id": "registrado", "type": "start", "label": "Registrado", "sublabel": "orden confirmada y pagada", "step": "01" },
+    { "id": "preparando", "type": "active", "label": "Preparando producto", "sublabel": "picking en botica", "step": "02" },
+    { "id": "en_camino", "type": "active", "label": "En camino", "sublabel": "motorizado asignado", "step": "03" },
+    { "id": "entregado", "type": "success", "label": "Entregado", "sublabel": "entrega validada", "step": "04" },
+    { "id": "reclamo", "type": "active", "label": "Reclamo abierto", "sublabel": "mal estado · foto + comprobante" },
+    { "id": "reposicion", "type": "active", "label": "Reposición en campo", "sublabel": "motorizado con reemplazo" },
+    { "id": "validacion", "type": "decision", "label": "Validación en entrega", "sublabel": "comprobante + producto en mal estado" },
+    { "id": "reemplazo_entregado", "type": "success", "label": "Cambio entregado", "sublabel": "producto nuevo entregado" },
+    { "id": "escalado", "type": "neutral", "label": "Escalado / cerrado", "sublabel": "tras 3 intentos de cambio" }
+  ],
+  "transitions": [
+    { "id": "reg-prep", "from": "registrado", "to": "preparando", "label": "pago confirmado" },
+    { "id": "prep-camino", "from": "preparando", "to": "en_camino", "label": "despachar" },
+    { "id": "camino-entregado", "from": "en_camino", "to": "entregado", "label": "entrega validada" },
+    { "id": "entregado-reclamo", "from": "entregado", "to": "reclamo", "label": "reporta mal estado", "variant": "dashed" },
+    { "id": "reclamo-reposicion", "from": "reclamo", "to": "reposicion", "label": "preparar reemplazo" },
+    { "id": "reposicion-validacion", "from": "reposicion", "to": "validacion", "label": "motorizado inspecciona" },
+    { "id": "validacion-reemplazo", "from": "validacion", "to": "reemplazo_entregado", "label": "válido (comprobante + daño)", "variant": "emphasis" },
+    { "id": "validacion-reposicion", "from": "validacion", "to": "reposicion", "label": "reintento (≤ 3)", "variant": "dashed" },
+    { "id": "validacion-escalado", "from": "validacion", "to": "escalado", "label": "3 intentos agotados", "variant": "security" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Camino principal", "items": ["El pedido transita solo por 4 estados obligatorios (RF-07.3).", "La confirmación de pago dispara el paso a Preparando producto."] },
+    { "dot": "amber", "title": "Reclamos (sub-flujo)", "items": ["Sin reembolsos: el reclamo se resuelve solo por cambio físico.", "El motorizado valida comprobante y mal estado en campo antes de entregar el reemplazo.", "Máximo 3 intentos adicionales; luego se escala o cierra (RF-04.3)."] },
+    { "dot": "rose", "title": "Pendiente", "items": ["PA-04 abierto: si el reclamo es un estado del ciclo de vida o un sub-flujo independiente posterior a la entrega."] }
+  ]
+}

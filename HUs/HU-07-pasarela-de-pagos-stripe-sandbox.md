@@ -8,7 +8,7 @@ Para completar mi compra digital de medicamentos de manera rápida, segura y con
 ## Alcance específico de la HU
 - **Sección del PRD:** 3. Alcance (3.1 Lo que INCLUYE — Pasarela de Pagos Integrada; 3.2 Lo que NO INCLUYE — Devolución de dinero en efectivo o extornos), 4. Personas y Actores (Cliente Final), 5. Requerimientos Funcionales (RF-06: Pasarela de Pagos Integrada — RF-06.1).
 - **Requerimientos Funcionales asociados:** RF-06.1 (*El sistema integrará una pasarela de pagos mediante Stripe operando en Modo Test [Sandbox] para el entorno MVP*).
-- **Criterios de éxito y RNF asociados:** RNF-01 (*Tiempo de respuesta <= 2.5s y estabilidad bajo concurrencia*), RNF-02 (*Cifrado SSL/TLS de extremo a extremo, cumplimiento de PCI-DSS y LPDP*), RNF-03 (*Disponibilidad mínima de 99.5% 24/7*), AGENTS.md (*Patrón Saga o transacciones MySQL nativas para flujos de pasarela de pagos y liberación de stock; prohibición estricta de almacenar contraseñas o tarjetas de crédito en texto plano o logs*).
+- **Criterios de éxito y RNF asociados:** RNF-01 (*Tiempo de respuesta <= 2.5s y estabilidad bajo concurrencia*), RNF-02 (*Cifrado SSL/TLS de extremo a extremo, cumplimiento de PCI-DSS y LPDP*), RNF-03 (*Disponibilidad mínima de 99.5% 24/7*), Criterio de éxito — Penetración Digital (*Al menos el 25% de la facturación global proveniente de ventas web según Sección 8 del PRD*), Criterio de éxito — Estabilidad del Sistema (*Disponibilidad mínima del 99.5% 24/7*), AGENTS.md (*Patrón Saga o transacciones MySQL nativas para flujos de pasarela de pagos y liberación de stock; prohibición estricta de almacenar contraseñas o tarjetas de crédito en texto plano o logs*).
 - **Cobertura:** Componente seguro de pago embebido (Stripe Elements) en modo pruebas (Test/Sandbox), procesamiento transaccional del cobro con tarjetas de crédito/débito, confirmación de orden de compra, descuento definitivo de stock reservado, asignación del estado inicial `Registrado` en el ciclo de vida del pedido y pantalla de confirmación con número de pedido.
 
 ## Criterios de aceptación funcionales
@@ -59,6 +59,9 @@ Feature: Pasarela de pagos Stripe Sandbox
     And muestra una notificación en pantalla indicando "Su pago fue rechazado por saldo insuficiente. Por favor intente con otra tarjeta"
 ```
 
+## Supuestos
+- **Operación en entorno Sandbox:** Se asume que para el MVP todas las transacciones de pago son procesadas exclusivamente con credenciales y tarjetas de prueba de Stripe en Modo Test, sin liquidación ni cargos bancarios reales.
+
 ## Puntos Abiertos
 - **PA-01 — Reserva de stock:** ¿Cuál es la duración exacta de la sesión/reserva de stock y la regla de liberación automática (inactividad, abandono o timeout)?  
   *(Afecta al tiempo límite disponible que tiene el cliente para completar el formulario de Stripe antes de que el stock reservado expire y sea liberado para otros usuarios).*
@@ -66,5 +69,5 @@ Feature: Pasarela de pagos Stripe Sandbox
 ## Exclusiones ("No incluye")
 - Pagos contra entrega en efectivo o cobros presenciales con terminal POS físico (despacho exclusivo con pago previo confirmado vía Stripe en web).
 - Devolución de dinero en efectivo o extornos bancarios: Cláusula cerrada de cero reembolsos por error de cliente o insatisfacción (Sección 3.2 del PRD y RF-04.2).
-- Pagos mediante transferencias bancarias manuales con subida de vouchers (eliminado en la arquitectura unificada con Stripe).
+- Pagos mediante transferencias bancarias manuales con subida de vouchers (no incluido en el MVP).
 - Aplicación Móvil Nativa descargable.

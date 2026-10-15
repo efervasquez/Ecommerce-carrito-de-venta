@@ -11,7 +11,7 @@ Para resolver incidencias de calidad de forma segura y transparente, respetando 
   - RF-04.1 (*El sistema permitirá registrar reclamos por mal estado obligando a adjuntar la foto del producto dañado y el comprobante. Esto disparará la orden de despacho de un motorizado con un producto de reemplazo*).
   - RF-04.2 (*El sistema bloqueará cualquier opción de reembolso o devolución de dinero, tanto en la interfaz del cliente como en la del administrador*).
   - RF-04.3 (*El sistema permitirá registrar hasta un máximo de 3 intentos adicionales secuenciales de cambio en campo administrados por la hoja de ruta del motorizado antes de marcar la incidencia como escalada o cerrada*).
-- **Criterios de éxito y RNF asociados:** RNF-02 (*Cumplimiento de LPDP y protección de evidencias adjuntas*), AGENTS.md (*Inmutabilidad de eventos y trazabilidad en logística inversa*).
+- **Criterios de éxito y RNF asociados:** RNF-02 (*Cumplimiento de LPDP y protección de evidencias adjuntas*), Criterio de éxito — Eficiencia Operativa (*Disminución del 30% en el volumen de atención manual y resolución estructurada de incidencias según Sección 8 del PRD*), AGENTS.md (*Inmutabilidad de eventos y trazabilidad en logística inversa*).
 - **Cobertura:** Formulario de registro de reclamo para el cliente con adjunción obligatoria de foto del producto dañado y comprobante de pago, generación de orden de reposición para motorizado propio, verificación física presencial en domicilio (comprobante original, pertenencia a Botica la Luz y evidencia de deterioro), control de hoja de ruta con hasta 3 intentos adicionales de cambio físico ante fallas sucesivas, y bloqueo total de opciones de devolución de dinero en todos los perfiles de usuario.
 
 ## Criterios de aceptación funcionales
@@ -67,6 +67,10 @@ Feature: Gestión de reclamos y logística inversa en campo
     And actualiza el estado de la incidencia a "Escalado a supervisión" para auditoría administrativa
     And no habilita bajo ningún concepto la devolución de dinero ni extorno
 ```
+
+## Supuestos
+- **Identidad del producto de reemplazo:** Se asume que el producto de reemplazo preparado en botica corresponde al mismo medicamento y presentación del comprobante original.
+- **Validación síncrona en campo:** Se asume que la comprobación física de comprobante y pertenencia a la botica es efectuada presencialmente por el motorizado de manera sincrónica al momento de la entrega en domicilio.
 
 ## Puntos Abiertos
 - **PA-04 — Reclamos en el ciclo de vida:** ¿El flujo de reclamos por mal estado debe reflejarse con uno o más estados adicionales en el ciclo de vida del pedido, o se gestiona como un sub-flujo independiente posterior a la entrega?  

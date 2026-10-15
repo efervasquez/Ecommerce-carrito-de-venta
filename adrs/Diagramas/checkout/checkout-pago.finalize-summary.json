@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\candidate.json",
+    "sha256": "1b520dd637ff6791bb45435e6b27b7bc61a406f0cfbe12823384bbadc89bdd12",
+    "bytes": 3322
+  },
+  "artifact": {
+    "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\checkout-pago.html",
+    "sha256": "7fba51fafbaac7c1b572fc3a8f95cc30149c84e7c473a6341d01636d5aa789a0",
+    "bytes": 819312
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\checkout-pago.finalize.json",
+    "summaryReceipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\checkout-pago.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\checkout-pago.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-15T05:45:28.212Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 7669
+}

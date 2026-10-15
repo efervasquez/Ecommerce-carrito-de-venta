@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "2022983c-7534-4d85-8def-092092132a0e",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\candidate.json",
+  "output": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\checkout-pago.html",
+  "specification": {
+    "sha256": "1b520dd637ff6791bb45435e6b27b7bc61a406f0cfbe12823384bbadc89bdd12",
+    "bytes": 3322
+  },
+  "artifact": {
+    "sha256": "7fba51fafbaac7c1b572fc3a8f95cc30149c84e7c473a6341d01636d5aa789a0",
+    "bytes": 819312
+  }
+}

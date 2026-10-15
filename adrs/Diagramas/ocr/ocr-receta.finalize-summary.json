@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\ocr\\candidate.json",
+    "sha256": "d9f0947fffede0ec6e34bf55566e7c914d00b49873f7b594e36a7660ab32fe0d",
+    "bytes": 3493
+  },
+  "artifact": {
+    "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\ocr\\ocr-receta.html",
+    "sha256": "c15ae7c8deec381132266542138cc1cfc7095b380bca6710f87fdc311306ad27",
+    "bytes": 820562
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\ocr\\ocr-receta.finalize.json",
+    "summaryReceipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\ocr\\ocr-receta.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\ocr\\ocr-receta.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-15T05:45:28.212Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 8580
+}

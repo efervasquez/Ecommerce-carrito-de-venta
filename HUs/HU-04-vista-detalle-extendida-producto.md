@@ -8,7 +8,7 @@ Para consultar su información clínica completa (contraindicaciones, advertenci
 ## Alcance específico de la HU
 - **Sección del PRD:** 3. Alcance (3.1 Lo que INCLUYE — Vista de Detalle del Producto, Reglas de Negocio y Atributos del Producto), 4. Personas y Actores (Cliente Final), 5. Requerimientos Funcionales (RF-02: Catálogo y Experiencia de Usuario — RF-02.3).
 - **Requerimientos Funcionales asociados:** RF-02.3 (*Al hacer clic en un ítem, el sistema cargará una página detallada que incluirá: foto, componentes, precio, flag de receta requerida, detalle, presentación, métodos de entrega [delivery/retiro], contraindicaciones, precauciones/advertencias y reacciones adversas*).
-- **Criterios de éxito y RNF asociados:** RNF-02 (*Cumplimiento de LPDP y regulaciones sanitarias sobre difusión de información farmacológica*), Criterio de éxito 1 (*Disminución del 30% en consultas manuales mediante autoservicio informativo completo*).
+- **Criterios de éxito y RNF asociados:** RNF-02 (*Cumplimiento de LPDP y regulaciones sanitarias sobre difusión de información farmacológica*), Criterio de éxito — Eficiencia Operativa (*Disminución del 30% en el volumen de atención manual para consultas de stock y cotizaciones según Sección 8 del PRD*).
 - **Cobertura:** Navegación desde la tarjeta de lista hacia la vista de página dedicada del producto, renderizado responsivo de los atributos clínicos, comerciales y logísticos obligatorios, e inclusión de selector de cantidades para agregar al carrito de compras.
 
 ## Criterios de aceptación funcionales
@@ -53,6 +53,9 @@ Feature: Vista de detalle del producto
     And presenta las precauciones de consumo generales y los métodos de entrega disponibles
     And permite añadir el producto directamente al carrito de compras
 ```
+
+## Supuestos
+- **Acción de compra en vista de detalle (extensión operativa):** Aunque RF-02.3 enumera prioritariamente los campos informativos y clínicos obligatorios de la ficha, se asume como extensión operativa estándar de e-commerce la inclusión del selector de cantidad y el botón "Agregar al carrito" en esta vista para permitir la conversión directa del cliente sin obligarlo a retornar a la lista de búsqueda.
 
 ## Puntos Abiertos
 - **PA-02 — Etiqueta "Precios bajos":** ¿Qué criterio activa la etiqueta "Precios bajos" en un producto?  

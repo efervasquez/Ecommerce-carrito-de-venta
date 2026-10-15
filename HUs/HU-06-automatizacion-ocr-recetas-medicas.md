@@ -10,7 +10,7 @@ Para que el sistema extraiga automáticamente los medicamentos y cantidades, val
 - **Requerimientos Funcionales asociados:**
   - RF-03.1 (*Al adjuntar una receta médica, el sistema extraerá mediante OCR los componentes/marcas y cantidades prescritas, consultará las existencias locales y, si todo está disponible, insertará los ítems y redirigirá directamente al usuario a la vista del carrito*).
   - RF-03.2 (*Si falta algún medicamento detectado por el OCR en el inventario, el sistema detendrá el proceso y mostrará una alerta explícita indicando la ausencia de stock de dicho producto*).
-- **Criterios de éxito y RNF asociados:** RNF-01 (*Rendimiento bajo 250 clientes concurrentes realizando operaciones críticas en paralelo como carga y procesamiento OCR*), RNF-02 (*Cifrado SSL/TLS y cumplimiento estricto con la Ley de Protección de Datos Personales [LPDP] de Perú al procesar recetas médicas*), Supuesto 2 (*El motor OCR mantiene un tiempo de procesamiento base estable para no degradar la experiencia de usuario*).
+- **Criterios de éxito y RNF asociados:** RNF-01 (*Rendimiento bajo 250 clientes concurrentes realizando operaciones críticas en paralelo como carga y procesamiento OCR*), RNF-02 (*Cifrado SSL/TLS y cumplimiento estricto con la Ley de Protección de Datos Personales [LPDP] de Perú al procesar recetas médicas*), Criterio de éxito — Eficiencia Operativa (*Disminución del 30% en el volumen de atención manual para consultas y cotizaciones según Sección 8 del PRD*), Supuesto 2 (*El motor OCR mantiene un tiempo de procesamiento base estable para no degradar la experiencia de usuario*).
 - **Cobertura:** Componente web con botón explícito "Leer receta", soporte de subida de imágenes (JPG, PNG) y documentos PDF, invocación del servicio OCR para reconocimiento óptico de caracteres médicos, extracción de principios activos / nombres de marcas y dosificación prescrita, validación inmediata contra existencias locales, adición automática de productos al carrito y redirección inmediata en flujo exitoso, o suspensión y emisión de alerta explícita ante quiebre de stock.
 
 ## Criterios de aceptación funcionales
@@ -51,6 +51,9 @@ Feature: Automatización OCR de recetas médicas
     And muestra una alerta explícita en pantalla indicando "Lo sentimos, no contamos con stock disponible de Claritromicina 500mg para completar su receta médica"
     And no redirige al carrito de compras
 ```
+
+## Supuestos
+- **Formatos y legibilidad documental:** Se asume que el procesamiento OCR soporta formatos de archivo estándar web (PDF, JPG, PNG) con resolución legible suficiente para identificar principios activos, marcas y cantidades prescritas.
 
 ## Puntos Abiertos
 - **PA-03 — OCR con stock mixto:** Ante una receta con medicamentos con y sin stock disponible, ¿el sistema inserta los productos disponibles y alerta solo los faltantes, o suspende la inserción de toda la receta?  

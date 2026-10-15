@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "870b2468-1ce2-4e1e-9dff-d6ba47934849",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\ocr\\candidate.json",
+  "output": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\ocr\\ocr-receta.html",
+  "specification": {
+    "sha256": "d9f0947fffede0ec6e34bf55566e7c914d00b49873f7b594e36a7660ab32fe0d",
+    "bytes": 3493
+  },
+  "artifact": {
+    "sha256": "c15ae7c8deec381132266542138cc1cfc7095b380bca6710f87fdc311306ad27",
+    "bytes": 820562
+  }
+}

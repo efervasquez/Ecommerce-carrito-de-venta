@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Checkout y pago — Botica la Luz",
+    "locale": "es",
+    "output": "adrs/Diagramas/checkout/checkout-pago.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    { "id": "cliente", "type": "external", "label": "Cliente", "sublabel": "navegador" },
+    { "id": "spa", "type": "frontend", "label": "React SPA", "sublabel": "Vite" },
+    { "id": "api", "type": "backend", "label": "FastAPI", "sublabel": "checkout" },
+    { "id": "mysql", "type": "database", "label": "MySQL", "sublabel": "stock + pedido" },
+    { "id": "stripe", "type": "external", "label": "Stripe", "sublabel": "test" },
+    { "id": "rabbitmq", "type": "messagebus", "label": "RabbitMQ", "sublabel": "despacho" }
+  ],
+  "messages": [
+    { "id": "m1", "from": "cliente", "to": "spa", "y": 160, "label": "pagar carrito" },
+    { "id": "m2", "from": "spa", "to": "api", "y": 190, "label": "POST /api/v1/checkout", "variant": "emphasis" },
+    { "id": "m3", "from": "api", "to": "mysql", "y": 220, "label": "BEGIN · crear pedido · reservar stock" },
+    { "id": "m4", "from": "mysql", "to": "api", "y": 250, "label": "ok", "variant": "return" },
+    { "id": "m5", "from": "api", "to": "stripe", "y": 285, "label": "crear PaymentIntent", "variant": "security" },
+    { "id": "m6", "from": "stripe", "to": "api", "y": 315, "label": "client_secret", "variant": "return" },
+    { "id": "m7", "from": "api", "to": "spa", "y": 345, "label": "200 · client_secret", "variant": "return" },
+    { "id": "m8", "from": "spa", "to": "cliente", "y": 375, "label": "mostrar pasarela", "variant": "return" },
+    { "id": "m9", "from": "stripe", "to": "api", "y": 430, "label": "webhook payment.succeeded", "variant": "security" },
+    { "id": "m10", "from": "api", "to": "mysql", "y": 475, "label": "COMMIT · confirmar pago + stock", "variant": "emphasis" },
+    { "id": "m11", "from": "mysql", "to": "api", "y": 525, "label": "ok", "variant": "return" },
+    { "id": "m12", "from": "api", "to": "rabbitmq", "y": 555, "label": "evento pedido.confirmado", "variant": "dashed" },
+    { "id": "m13", "from": "api", "to": "spa", "y": 585, "label": "orden confirmada", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "spa", "from": 185, "to": 380, "type": "frontend" },
+    { "participant": "api", "from": 185, "to": 592, "type": "backend" },
+    { "participant": "mysql", "from": 215, "to": 255, "type": "database" },
+    { "participant": "stripe", "from": 280, "to": 320, "type": "external" },
+    { "participant": "mysql", "from": 470, "to": 530, "type": "database" },
+    { "participant": "rabbitmq", "from": 550, "to": 560, "type": "messagebus" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Camino feliz", "items": ["El pedido se crea con stock reservado antes de cobrar.", "El pago se confirma por webhook y cierra en una única transacción MySQL."] },
+    { "dot": "rose", "title": "Idempotencia", "items": ["Un webhook reintentado con la misma idempotency_key no produce doble cargo ni doble decremento de stock (ADR 0013)."] },
+    { "dot": "amber", "title": "Desacople", "items": ["Tras confirmar, se publica pedido.confirmado a RabbitMQ para disparar el despacho (ADR 0007).", "No hay reembolsos en ninguna interfaz (RF-04.2)."] }
+  ]
+}

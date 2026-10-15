@@ -8,7 +8,7 @@ Para acceder a un formulario obligatorio donde pueda definir una nueva contrase�
 ## Alcance específico de la HU
 - **Sección del PRD:** 3. Alcance (3.1 Lo que INCLUYE — Módulo de Autoregistro, Autenticación y Recuperación), 4. Personas y Actores (Cliente Final), 5. Requerimientos Funcionales (RF-01: Módulo de Gestión de Usuarios y Accesos — RF-01.2).
 - **Requerimientos Funcionales asociados:** RF-01.2 (*El sistema dispondrá de un flujo de recuperación de contraseña que enviará un correo con un link único. Este link dirigirá a una interfaz donde se solicitará obligatoriamente la nueva contraseña para permitir el reingreso*).
-- **Criterios de éxito y RNF asociados:** RNF-02 (*Seguridad y Privacidad de Datos / Tokens de un solo uso y caducidad temporal según LPDP*), Supuesto 3 (*Servidor SMTP con despacho inmediato de correos sin encolamientos*).
+- **Criterios de éxito y RNF asociados:** RNF-02 (*Seguridad y Privacidad de Datos / Tokens de un solo uso y caducidad temporal según LPDP*), RNF-03 (*Disponibilidad 24/7 con objetivo mínimo de 99.5%*), Criterio de éxito — Estabilidad del Sistema (*Disponibilidad mínima del 99.5% 24/7 según Sección 8 del PRD*), Supuesto 3 (*Servidor SMTP con despacho inmediato de correos sin encolamientos*).
 - **Cobertura:** Opción de recuperación "¿Olvidaste tu contraseña?" en el formulario de inicio de sesión, validación de cuenta existente, emisión y envío de enlace directo con token único criptográfico vía correo electrónico, redirección al formulario exclusivo y obligatorio de cambio de clave, invalidación del enlace tras su uso y actualización de credenciales.
 
 ## Criterios de aceptación funcionales
@@ -51,6 +51,9 @@ Feature: Recuperación de contraseña de clientes
     And muestra una pantalla informativa indicando que el enlace ya no es válido o ha expirado
     And ofrece un botón para solicitar un nuevo enlace de recuperación
 ```
+
+## Supuestos
+- **Seguridad del link único:** Se asume como regla funcional y técnica estándar (derivada de RF-01.2, RNF-02 y seguridad perimetral de AGENTS.md) que el 'link único' opera mediante un token criptográfico de un solo uso con caducidad temporal para evitar ataques de reutilización o secuestro de sesión.
 
 ## Puntos Abiertos
 - Sin puntos abiertos pendientes en este requerimiento. Todas las definiciones funcionales se encuentran confirmadas en el PRD (RF-01.2).

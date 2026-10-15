@@ -10,7 +10,7 @@ Para mantener operativo el catálogo y resguardar la exactitud del stock ante in
 - **Requerimientos Funcionales asociados:**
   - RF-05.1 (*El Backoffice dispondrá de un módulo de inventario manual e independiente que permitirá dar de alta nuevos productos y actualizar la cantidad de stock de forma directa*).
   - RF-05.2 (*El módulo manual permitirá la edición total de la estructura de datos del producto descrita en este PRD [precios, ofertas, descripciones clínicas, requisitos de receta] para mitigar pérdidas de conexión con las APIs del ERP principal*).
-- **Criterios de éxito y RNF asociados:** RNF-03 (*Operación continua y disponibilidad mínima de 99.5% 24/7 mitigando caídas externas*), AGENTS.md (*Control de accesos estricto basado en roles RBAC para perfiles administrativos y de farmacia*).
+- **Criterios de éxito y RNF asociados:** RNF-03 (*Operación continua y disponibilidad mínima de 99.5% 24/7 mitigando caídas externas*), Criterio de éxito — Estabilidad del Sistema (*Disponibilidad mínima del 99.5% 24/7 asegurando contingencia operativa según Sección 8 del PRD*), AGENTS.md (*Control de accesos estricto basado en roles RBAC para perfiles administrativos y de farmacia*).
 - **Cobertura:** Módulo web en Backoffice con autenticación restringida para operadores autorizados, formulario para registro de nuevos medicamentos e insumos, actualización manual e inmediata del stock numérico, y edición exhaustiva de los campos comerciales y sanitarios de cualquier producto.
 
 ## Criterios de aceptación funcionales
@@ -69,6 +69,9 @@ Feature: Módulo de contingencia de inventario y edición manual
     And resalta el campo de stock con un mensaje indicando "La cantidad de existencias debe ser un número entero mayor o igual a cero"
     And no altera el inventario actual en la base de datos
 ```
+
+## Supuestos
+- **Persistencia local en contingencia:** Se asume que el módulo de contingencia interactúa y escribe directamente en la base de datos MySQL local de la botica, garantizando que el catálogo y el stock permanezcan operativos independientemente del estado de la integración con el ERP.
 
 ## Puntos Abiertos
 - **PA-02 — Etiqueta "Precios bajos":** ¿Qué criterio activa la etiqueta "Precios bajos" en un producto?  
