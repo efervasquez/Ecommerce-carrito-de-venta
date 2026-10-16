@@ -1,6 +1,9 @@
+import logging
 from typing import Optional, Tuple
 from src.modules.health.repository import HealthRepository
 from src.modules.health.schemas import HealthResponse
+
+logger = logging.getLogger(__name__)
 
 
 class HealthService:
@@ -10,8 +13,17 @@ class HealthService:
         self.repository = repository or HealthRepository()
 
     async def get_health_status(self) -> Tuple[int, HealthResponse]:
-        mysql_ok = await self.repository.check_mysql()
-        rabbitmq_ok = await self.repository.check_rabbitmq()
+        try:
+            mysql_ok = await self.repository.check_mysql()
+        except Exception as exc:
+            logger.error(f"Excepcion inesperada al verificar MySQL: {exc}")
+            mysql_ok = False
+
+        try:
+            rabbitmq_ok = await self.repository.check_rabbitmq()
+        except Exception as exc:
+            logger.error(f"Excepcion inesperada al verificar RabbitMQ: {exc}")
+            rabbitmq_ok = False
 
         mysql_status = "connected" if mysql_ok else "disconnected"
         rabbitmq_status = "connected" if rabbitmq_ok else "disconnected"

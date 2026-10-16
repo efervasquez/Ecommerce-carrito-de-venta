@@ -121,3 +121,13 @@ Definidas en `backend/.env.example` y consumidas por `src.config.Settings`:
   - Se actualizó la anotación de tipo en `backend/src/config.py` a `cors_origins: Union[List[str], str] = Field(...)`.
   - El validador `parse_cors_origins` convierte y normaliza a `List[str]` tanto cadenas JSON como strings separados por comas o cadenas únicas.
   - Se comprobó localmente con pruebas específicas garantizando que no se produce `JSONDecodeError` ni `SettingsError`.
+
+---
+
+## 6. Mejora Defensiva de Veredicto (Vuelta 2 de 2)
+
+- **Instrucción del LEAD**: Blindaje defensivo en `HealthService.get_health_status()` para asegurar que cualquier excepción no controlada en el sondeo físico de repositorios (MySQL o RabbitMQ) sea capturada y evaluada como `False` (`disconnected`), respondiendo HTTP 503 de manera resiliente.
+- **Implementación**:
+  - En `backend/src/modules/health/service.py`, se envolvieron independientemente las llamadas a `self.repository.check_mysql()` y `self.repository.check_rabbitmq()` dentro de bloques `try/except Exception`.
+  - Si ocurre una excepción inesperada, se emite log de error estructurado y se evalúa como `False`, garantizando que el endpoint responda HTTP 503 sin propagar excepciones no deseadas.
+  - Se comprobó localmente simulando fallos críticos y verificando la respuesta HTTP 503 con payload `{"status":"unhealthy","mysql":"disconnected","rabbitmq":"disconnected"}`.
