@@ -111,3 +111,13 @@ Definidas en `backend/.env.example` y consumidas por `src.config.Settings`:
 - **Rutas tocadas:** Únicamente rutas asignadas al rol `DEV` en `AGENTS.md` y `informes/DEV-SPRINT0.md`.
 - **Rutas no tocadas:** Cero modificaciones en rutas del `TESTER` (`backend/tests/**`, `frontend/tests/**`) ni en documentación reservada a `LEAD/humano`.
 - **Cero lógica de negocio:** No se crearon modelos, tablas, rutas ni componentes para usuarios, catálogo, carrito, pedidos, pagos, OCR ni despacho. Todo el alcance corresponde estrictamente al esqueleto técnico del Sprint 0.
+
+---
+
+## 5. Ajustes por Veredicto (Vuelta 1 de 2)
+
+- **Observación del LEAD**: Fallo `SettingsError` al parsear `cors_origins: List[str]` en `backend/src/config.py` cuando la variable de entorno se define como string plano o delimitado por comas.
+- **Corrección implementada**:
+  - Se actualizó la anotación de tipo en `backend/src/config.py` a `cors_origins: Union[List[str], str] = Field(...)`.
+  - El validador `parse_cors_origins` convierte y normaliza a `List[str]` tanto cadenas JSON como strings separados por comas o cadenas únicas.
+  - Se comprobó localmente con pruebas específicas garantizando que no se produce `JSONDecodeError` ni `SettingsError`.
