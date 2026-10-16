@@ -75,9 +75,9 @@ def mock_db_healthy():
 
 @pytest.fixture
 def mock_db_unhealthy():
-    """Helper mock to simulate database failure or disconnection."""
+    """Helper mock to simulate database failure or disconnection (returns False)."""
     mock = AsyncMock()
-    mock.side_effect = Exception("Database connection refused: MySQL92 unreachable")
+    mock.return_value = False
     return mock
 
 
@@ -91,7 +91,8 @@ def mock_rabbitmq_healthy():
 
 @pytest.fixture
 def mock_rabbitmq_unhealthy():
-    """Helper mock to simulate RabbitMQ connection failure."""
+    """Helper mock to simulate RabbitMQ connection failure (returns False)."""
     mock = AsyncMock()
-    mock.side_effect = Exception("RabbitMQ connection refused on localhost:5672")
+    mock.return_value = False
     return mock
+
