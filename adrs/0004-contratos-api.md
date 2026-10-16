@@ -17,6 +17,14 @@ es React. Los eventos entre módulos no son llamadas HTTP síncronas: van por el
 - Autenticación/autorización con **JWT firmado + scopes RBAC** por endpoint (cliente, motorizado,
   admin/farmacéutico/operador), validado en middleware antes de cada operación.
 - Todo payload de petición/evento tipado y validado con **Pydantic** (y Zod en frontend).
+- **Sesión Guest (S-02):** Identificada mediante cookie `HttpOnly; SameSite=Lax; Secure` firmada por
+  el servidor, protegiendo carritos anónimos contra scripts maliciosos.
+- **Jobs Asíncronos (W-04):** Procesos diferidos como OCR operan bajo el patrón de Job con polling
+  controlado:
+  - `POST /api/v1/ocr/recetas` -> `HTTP 202 Accepted` devolviendo `{ job_id, estado: "procesando", poll_interval_ms: 1500 }`.
+  - `GET /api/v1/ocr/jobs/{job_id}` -> `HTTP 200` con estado (`procesando`, `completado`, `requiere_validacion`, `error`).
+- **Observabilidad:** Endpoint `GET /api/v1/health` que sondea el estado de conexión a MySQL, RabbitMQ
+  y Meilisearch, respondiendo `200 OK` o `503 Service Unavailable`.
 
 ## Alternativas consideradas
 

@@ -20,8 +20,15 @@ lectura principal (ADR 0006).
 
 ## Alternativas consideradas
 
-- **Un solo modelo de lecturas/escrituras** — más simple, pero no cumple el patrón obligatorio y
-  dificulta cachear la búsqueda bajo 250 usuarios concurrentes.
+- **Vistas materializadas / Tablas denormalizadas en MySQL** — menor superficie operativa al no
+  requerir un segundo servicio, pero no resuelve la tolerancia a typos en español ni el ranking de
+  relevancia requerido por el PRD RF-02.1.
+- **CQRS a nivel de código con Read-Replicas MySQL** — separa pools de lectura y escritura sin
+  índice externo, pero duplicar instancias de MySQL sobrecarga memoria en hardware limitado
+  (`AGENTS.md` §9) sin aportar búsqueda difusa.
+- **Un solo modelo relacional de lecturas/escrituras en MySQL** — más simple, pero incumple el
+  patrón mandatorio de `AGENTS.md` §5 y genera contención en la tabla de productos bajo 250
+  usuarios concurrentes.
 
 ## Consecuencias
 

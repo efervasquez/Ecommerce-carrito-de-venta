@@ -17,6 +17,17 @@ Usar **Meilisearch self-hosted** como motor de búsqueda e índice de lectura de
 typo-tolerance configurable, ranking por relevancia y soporte de filtros (categoría, oferta,
 precios bajos, requiere receta).
 
+### Mecanismo de sincronización MySQL → Meilisearch (S-01)
+
+1. **Sincronización en tiempo casi real vía eventos:** Al persistir o mutar un producto en MySQL
+   (alta, modificación o contingencia de stock manual RF-05), el servicio emite un evento
+   `catalogo.producto_modificado` al bus RabbitMQ. Un worker asíncrono consume el evento y ejecuta
+   un `upsert` puntual en el índice de Meilisearch.
+2. **Idempotencia y reintentos:** Si Meilisearch estuviera temporalmente inaccesible, el worker
+   aplica la política de reintentos con backoff (ADR 0007).
+3. **Reconciliación y reindexación periódica:** Se dispone de un comando CLI programado vía Tarea de
+   Windows que efectúa una reindexación completa de consistencia fuera de horas pico (semanal).
+
 ## Alternativas consideradas
 
 - **MySQL FULLTEXT + n-gram** — sin servicios extra, pero la tolerancia a errores de tipeo es pobre
@@ -27,5 +38,6 @@ precios bajos, requiere receta).
 ## Consecuencias
 
 - Búsqueda difusa de calidad con poco esfuerzo de integración y bajo consumo relativo de recursos.
-- Trade-off: un servicio local adicional a mantener, y eventual consistencia entre MySQL y el
-  índice (requiere sincronización en alta/edición de producto, ver ADR 0005).
+- Sincronización robusta desacoplada por eventos sin frenar las transacciones de escritura en MySQL.
+- Trade-off: un servicio local adicional a mantener, y eventual consistencia de milisegundos entre
+  MySQL y el índice.

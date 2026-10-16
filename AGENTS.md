@@ -108,3 +108,11 @@
 * **Conectividad externa (MCP):** Los agentes se conectarán vía MCP a herramientas externas autorizadas para el diseño de wireframes, generación de código, empaquetado para IIS, testing de penetración local, compilación y auditorías de código.
 * **Antes de modificar código:** El agente debe validar que los cambios mantengan la compatibilidad con el entorno Windows/IIS, asegurando la correcta gestión asíncrona de FastAPI bajo procesos FastCGI o HttpPlatformHandler, y comprobar que no se rompan las reglas de acceso del firewall local.
 * **Después de modificar código:** Actualizar la documentación en su respectiva carpeta bajo `docs/` en formato Markdown, adjuntando wireframes o diagramas si corresponde.
+
+## Propiedad de rutas
+
+| Rol | Rutas |
+|---|---|
+| **TESTER** | `backend/tests/**`, `frontend/tests/**`, `frontend/src/**/*.test.tsx`, `frontend/src/**/*.spec.ts` |
+| **DEV** | `backend/src/**`, `backend/alembic/**`, `backend/alembic.ini`, `backend/pyproject.toml`, `backend/poetry.lock`, `backend/requirements.txt`, `backend/web.config`, `backend/.env.example`, `frontend/src/**` (excluyendo tests), `frontend/package.json`, `frontend/pnpm-lock.yaml`, `frontend/vite.config.*`, `frontend/tsconfig.*`, `frontend/index.html`, `frontend/public/**`, `infra/**` |
+| **Solo LEAD / humano** | `AGENTS.md`, `CLAUDE.md`, `.agents/**`, `.claude/**`, `SPRINT0.md`, `contratos/**`, `docs/**`, `HUs/**`, `adrs/**`, `TECH-DESIGN.md` |

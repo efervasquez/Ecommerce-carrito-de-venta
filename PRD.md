@@ -3,7 +3,7 @@
 | Información General | Detalle |
 | :--- | :--- |
 | **Fecha de Creación** | 27 de Septiembre de 2026 |
-| **Última Actualización** | 14 de Octubre de 2026 (Revisión de consistencia) |
+| **Última Actualización** | 15 de Octubre de 2026 (Actualización de Seguridad v1.4) |
 | **Estado** | En Revisión |
 | **Autores** | Product Manager / Solutions Architect |
 | **Público Objetivo** | Clientes recurrentes y nuevos de Botica la Luz |
@@ -16,6 +16,7 @@
 * **v1.1 (04/10/2026):** Incorporación del módulo de autoregistro de clientes, lógica de persistencia de sesión vinculada al carrito, definición de pasarela de pruebas (Stripe Test), reglas del motor OCR, flujo detallado del buzón de despacho por estados y formalización de la matriz de reportería del Backoffice.
 * **v1.2 (08/10/2026):** Actualización completa de flujos de negocio. Incorporación de recuperación de contraseñas por correo, lógica OCR síncrona con carrito/stock, marcas informativas en productos (ofertas, receta, precios bajos), buscador de scroll infinito sin paginación, vista de detalle extendida del producto, sección de ofertas en el carrito, reestructuración estricta del flujo físico de reclamos (límite de 3 intentos en campo), sin reembolsos, y adición del módulo de gestión manual de stock para contingencias ERP. Definición del RNF PA-07 (Concurrencia).
 * **v1.3 (14/10/2026):** Revisión de consistencia. Reenumeración de RNF (PA-07 → RNF-01), adición de RF-06 (Pasarela de pagos) y RF-07 (Ciclo logístico), armonización de la disponibilidad con el KPI (99.5%), armonización de la redacción del límite de reintentos en RF-04.3 y formalización de la sección de Puntos Abiertos.
+* **v1.4 (15/10/2026):** Actualización de seguridad derivada de la revisión adversarial. En RF-01.1 y Sección 3.1, se reemplaza el despacho de contraseñas provisionales en texto plano por el envío de enlaces seguros de activación de un solo uso con definición autónoma de contraseña por parte del cliente (ADR 0017).
 
 ---
 
@@ -35,7 +36,7 @@ Botica la Luz procesa todas sus ventas de medicamentos e insumos de manera prese
 ### 3.1 Lo que INCLUYE (MVP)
 
 * **Módulo de Autoregistro, Autenticación y Recuperación:**
-  * Permite al usuario realizar un auto-registro ingresando únicamente su correo electrónico; el sistema genera y envía una contraseña provisional de forma automática.
+  * Permite al usuario realizar un auto-registro ingresando únicamente su correo electrónico; el sistema genera y despacha un enlace seguro de activación de un solo uso para que el cliente configure su propia contraseña de acceso de manera privada y protegida.
   * Control de sesión activa para mantener al cliente reconocido en la web.
   * **Recuperación de Contraseña:** Si el cliente olvida sus credenciales, el módulo dispondrá de una opción de recuperación. El sistema enviará una notificación por correo electrónico con un enlace de acceso directo que redirigirá al usuario a un formulario obligatorio de cambio de contraseña para restablecer su ingreso.
 
@@ -95,7 +96,7 @@ Botica la Luz procesa todas sus ventas de medicamentos e insumos de manera prese
 ## 5. Requerimientos Funcionales
 
 ### RF-01: Módulo de Gestión de Usuarios y Accesos
-* **RF-01.1:** El sistema permitirá el autoregistro rápido ingresando únicamente el correo electrónico, enviando una contraseña provisional de manera automatizada.
+* **RF-01.1:** El sistema permitirá el autoregistro rápido ingresando únicamente el correo electrónico, enviando un enlace seguro de activación de un solo uso que permitirá al usuario definir su propia contraseña de acceso.
 * **RF-01.2:** El sistema dispondrá de un flujo de recuperación de contraseña que enviará un correo con un link único. Este link dirigirá a una interfaz donde se solicitará obligatoriamente la nueva contraseña para permitir el reingreso.
 
 ### RF-02: Catálogo y Experiencia de Usuario (UI/UX)
