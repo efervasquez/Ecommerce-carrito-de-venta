@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Transversal — seguridad perimetral de IIS para todo el sistema.
+
 ## Contexto
 
 `AGENTS.md` §8 exige explícitamente mitigación de "SQL Injection, XSS, Bad Bots, OWASP Top 10,
@@ -22,6 +26,7 @@ sin software de terceros:
 - Limitar peticiones por IP en endpoints críticos:
   - `POST /api/v1/auth/*` (login, registro, recuperación): **3 peticiones por minuto por IP** (C-04).
   - `POST /api/v1/carrito/items` (adición al carrito): **1 req/s por IP** con ráfaga (*burst*) de hasta 5 (W-01).
+  - `POST /api/v1/checkout` (inicio de checkout guest/autenticado): **3 inicios por minuto por IP** (ADR 0016).
   - `GET /api/v1/catalogo/buscar` (búsqueda): 20 req/s por IP.
 - Las IPs que excedan el límite reciben HTTP 429 (Too Many Requests).
 - Se habilita el módulo `DynamicIpRestrictions` de IIS con logging de IPs bloqueadas.

@@ -4,6 +4,10 @@
 
 Aceptado (v2 — reescrito tras revisión adversarial C-02)
 
+## Ámbito
+
+Historia de usuario — HU-07 (Pasarela de pagos Stripe Sandbox).
+
 ## Contexto
 
 `AGENTS.md` §5 permite "Patrón Saga o transacciones MySQL nativas" para flujos que involucren la
@@ -23,18 +27,27 @@ bloqueando a los 249 usuarios restantes y causando timeouts en cascada bajo carg
 Garantizar la consistencia del flujo pago → stock con un **checkout en dos fases** que evita
 transacciones largas:
 
-### Fase 1: Inicio de checkout (sin TX larga + prórroga de reserva C-02)
+### Fase 1: Inicio de checkout (sin TX larga + reserva/prórroga C-02)
 
 1. El cliente solicita `POST /api/v1/checkout`.
-2. El backend **valida** que las reservas del carrito siguen vigentes (consulta sin lock:
-   `SELECT ... WHERE reserva_expira_en > NOW()`).
-3. Si las reservas son válidas:
-   - Se cambia el estado del carrito a **`en_pago`**.
-   - Se otorga una **prórroga temporal exclusiva de 10 minutos adicionales** a la reserva (`reserva_expira_en = NOW() + INTERVAL 10 MINUTE`),
-     bloqueando la acción del job de purga de carritos (ADR 0011) mientras el cliente digita su tarjeta y autentica 3D Secure.
-4. Se crea un `PaymentIntent` en Stripe con una **clave de idempotencia** (`idempotency_key = f"pedido-{carrito_id}-{intento}"`).
-5. Se devuelve el `client_secret` del PaymentIntent al frontend para completar el pago en el navegador (Stripe.js).
-6. **No se abre ninguna transacción MySQL larga.** Las reservas de stock prorrogadas protegen contra sobreventa.
+2. El backend resuelve el **punto de reserva según el tipo de carrito** (ADR 0016):
+   - **Cliente autenticado:** la reserva nació al agregar al carrito (ADR 0011). El backend **valida**
+     que sigue vigente (consulta sin lock: `SELECT ... WHERE reserva_expira_en > NOW()`) y, de ser
+     válida, la **prorroga**.
+   - **Cliente guest:** no hay reserva previa (el guest no retiene stock mientras navega). El backend
+     **crea** la reserva en este momento, con TTL de 24 horas (PA-01), dentro de una transacción corta
+     que verifica la disponibilidad real de stock; si no alcanza, el checkout se rechaza antes de
+     contactar a Stripe.
+3. Se cambia el estado del carrito a **`en_pago`** y se otorga una **prórroga temporal exclusiva de
+   10 minutos adicionales** a la reserva (`reserva_expira_en = NOW() + INTERVAL 10 MINUTE`), bloqueando
+   la acción del job de purga de carritos (ADR 0011) mientras el cliente digita su tarjeta y autentica
+   3D Secure.
+4. Se crea un `PaymentIntent` en Stripe con una **clave de idempotencia**
+   (`idempotency_key = f"pedido-{carrito_id}-{intento}"`).
+5. Se devuelve el `client_secret` del PaymentIntent al frontend para completar el pago en el navegador
+   (Stripe.js).
+6. **No se abre ninguna transacción MySQL larga.** La reserva (creada o prorrogada) protege contra
+   sobreventa durante la ventana hasta el webhook.
 
 ### Fase 2: Webhook de confirmación (TX MySQL corta)
 

@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "2022983c-7534-4d85-8def-092092132a0e",
+  "deliveryReceiptId": "cc862ec3-dd4b-474d-afb7-ea79995c125a",
   "artifact": {
     "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\checkout-pago.html",
-    "sha256": "7fba51fafbaac7c1b572fc3a8f95cc30149c84e7c473a6341d01636d5aa789a0",
-    "bytes": 819312
+    "sha256": "111637dc3b54af25581a623d0113c4a511c32c1caf21075bd73ea97533020d29",
+    "bytes": 819688
   },
   "state": {
     "detail": "read",

@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Transversal — disponibilidad y observabilidad del sistema.
+
 ## Contexto
 
 El PRD RNF-03 y el KPI §8 exigen 99.5% de disponibilidad 24/7 (≈3.6 h/mes de caída permitida). El

@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Transversal — contratos de API, autenticación JWT/RBAC y observabilidad para todo el sistema.
+
 ## Contexto
 
 El `AGENTS.md` obliga a exponer el backend mediante "APIs asíncronas", con autenticación por tokens

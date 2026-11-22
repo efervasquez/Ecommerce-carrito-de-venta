@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Historia de usuario — HU-03 (Búsqueda difusa y catálogo scroll infinito).
+
 ## Contexto
 
 El PRD RF-02.1 exige *Fuzzy Search* tolerante a errores de tipeo (ej. mapear "camiaa" → "camisa") y

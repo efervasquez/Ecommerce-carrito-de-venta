@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "receiptId": "7fa356f5-faa0-466c-9228-148575577dce",
+  "receiptId": "3ea8db29-a7f0-4519-8e50-83b8250e89a2",
   "status": "current",
   "command": "deliver",
   "type": "lifecycle",
   "input": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\lifecycle\\candidate.json",
   "output": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\lifecycle\\ciclo-pedido.html",
   "specification": {
-    "sha256": "8d569e08d73c4128aede76996a46d6d55d61ca3ad8092467adf8c5f45e136359",
-    "bytes": 3190
+    "sha256": "343cb0c576ef25b3720adcdd61f1a6af49faf99807a9c01992bc739bf9729ad0",
+    "bytes": 3232
   },
   "artifact": {
-    "sha256": "a5141edf16d631b1664822885088baa44a8338f788408df454c484f7504b6159",
-    "bytes": 822342
+    "sha256": "9a30fadf4426f32a566c67e9f9848d16509da4f5efc8959d614ed7e37990516a",
+    "bytes": 822384
   }
 }

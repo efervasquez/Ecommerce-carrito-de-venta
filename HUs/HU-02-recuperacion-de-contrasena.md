@@ -55,7 +55,7 @@ Feature: Recuperación de contraseña de clientes
 ## Supuestos
 - **Seguridad del link único:** Se asume como regla funcional y técnica estándar (derivada de RF-01.2, RNF-02 y seguridad perimetral de AGENTS.md) que el 'link único' opera mediante un token criptográfico de un solo uso con caducidad temporal para evitar ataques de reutilización o secuestro de sesión.
 
-## Puntos Abiertos
+## Puntos Abiertos (Resueltos)
 - Sin puntos abiertos pendientes en este requerimiento. Todas las definiciones funcionales se encuentran confirmadas en el PRD (RF-01.2).
 
 ## Exclusiones ("No incluye")

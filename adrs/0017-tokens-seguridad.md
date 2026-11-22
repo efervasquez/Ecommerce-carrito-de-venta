@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Historia de usuario — HU-01 (Autoregistro) y HU-02 (Recuperación de contraseña).
+
 ## Contexto
 
 El PRD RF-01 define autoregistro con envío de contraseña provisional y recuperación de contraseña

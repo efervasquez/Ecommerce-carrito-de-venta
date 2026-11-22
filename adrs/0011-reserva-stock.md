@@ -1,23 +1,28 @@
-# ADR 0011: Reserva de stock (reserva al agregar + TTL + purga)
+# ADR 0011: Reserva de stock (reserva al agregar + TTL 24h + purga)
 
 ## Estado
 
 Aceptado
 
+## Ámbito
+
+Historia de usuario — HU-05 (Carrito de compras) y HU-07 (Pasarela de pagos).
+
 ## Contexto
 
-El PRD RF-03.3 y §3 describen "selección y reserva de productos ligada estrictamente a la duración
-de la sesión". Para evitar sobreventa, el stock debe reservarse al agregar al carrito. El PRD deja
-abierto PA-01: la duración exacta de la reserva y la regla de liberación automática (inactividad,
-abandono o timeout). `AGENTS.md` §9 exige purgar carritos abandonados mediante Tareas programadas de
-Windows.
+El PRD RF-03.4 y §3 describen "selección y reserva de productos ligada estrictamente a la duración
+de la sesión". Para evitar sobreventa, el stock debe reservarse al agregar al carrito. PA-01 quedó
+RESUELTO (31/10/2026): la reserva tiene una vigencia de 24 horas y se libera automáticamente por
+timeout/expiracion sin concretar la compra, devolviendo las unidades al stock disponible. `AGENTS.md`
+§9 exige purgar carritos abandonados mediante Tareas programadas de Windows.
 
 ## Decisión
 
-Reservar stock **al agregar al carrito**, con un campo de reserva y **TTL de expiración**. Un **job
-programado (Tarea de Windows)** libera las reservas y purga los carritos cuyo TTL venció. La
-**duración exacta del TTL queda como parámetro** a definir por PM/BA (PA-01) y se configura, no se
-harcodea.
+Reservar stock **al agregar al carrito** (aplica al cliente **autenticado**), con un campo de reserva y
+**TTL de expiración de 24 horas** (PA-01). El cliente **guest** reserva stock solo al llegar al checkout;
+el punto de reserva por tipo de carrito se define en **ADR 0016** (PA-06, RF-03.5). Un **job programado (Tarea de Windows)**
+libera las reservas y purga los carritos cuyo TTL venció. El valor del TTL se configura, no se harcodea,
+para permitir ajustes sin redespliegue.
 
 ### Prórroga Temporal de Reserva en Checkout (C-02)
 
@@ -40,6 +45,8 @@ o completa la autenticación bancaria (3D Secure):
 
 ## Consecuencias
 
-- Sin sobreventa y consistencia garantizada por reserva + liberación automática + prórroga segura en checkout.
-- Trade-off: stock "retenido" por carritos que nunca se convierten en venta; el TTL debe
-  balancear disponibilidad vs. riesgo de abandono. Pendiente resolver PA-01 antes de fijar el valor.
+- Sin sobreventa y consistencia garantizada por reserva + liberación automática + prórroga segura en
+  checkout.
+- Trade-off: stock "retenido" por carritos que nunca se convierten en venta; el TTL de 24h debe
+  balancear disponibilidad vs. riesgo de abandono, y los límites anti-abuso de ADR 0016 amortiguan la
+  retención anónima prolongada.

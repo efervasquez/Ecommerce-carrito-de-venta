@@ -29,6 +29,7 @@
 
 * **Carpetas importantes:** Las subcarpetas dentro de `docs/` (`pm`, `ba`, `ux`, `qa`, `aq`) son estructurales; contienen los entregables de cada agente y deben actualizarse antes de escribir código utilizando archivos Markdown (`.md`) y enlaces a Wireframes.
 * **Qué NO debe tocar:** No modificar estructuras de carpetas raíz ni alterar configuraciones globales de red local, firewall del servidor o empaquetado sin aprobación cruzada entre el Agente Arquitecto (Aq) y el Product Manager (PM).
+* **El PRD.md se ubica en la raiz del proyecto.**
 
 ### 3. Tech Stack
 

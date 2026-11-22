@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Transversal — aplica a todo el sistema (stack tecnológico base).
+
 ## Contexto
 
 El proyecto nace greenfield, pero el `AGENTS.md` del repositorio fija una pila específica para el

@@ -33,6 +33,6 @@
   "cards": [
     { "dot": "emerald", "title": "Camino principal", "items": ["El pedido transita solo por 4 estados obligatorios (RF-07.3).", "La confirmación de pago dispara el paso a Preparando producto."] },
     { "dot": "amber", "title": "Reclamos (sub-flujo)", "items": ["Sin reembolsos: el reclamo se resuelve solo por cambio físico.", "El motorizado valida comprobante y mal estado en campo antes de entregar el reemplazo.", "Máximo 3 intentos adicionales; luego se escala o cierra (RF-04.3)."] },
-    { "dot": "rose", "title": "Pendiente", "items": ["PA-04 abierto: si el reclamo es un estado del ciclo de vida o un sub-flujo independiente posterior a la entrega."] }
+    { "dot": "rose", "title": "Reclamos (PA-04 resuelto)", "items": ["PA-04 resuelto: el reclamo es un sub-flujo posterior manual e independiente tras Entregado; no agrega estados al ciclo de vida del pedido."] }
   ]
 }

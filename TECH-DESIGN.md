@@ -97,7 +97,7 @@ Entidades principales (ver ADR 0003):
 - [ ] Agregar al carrito decrementa stock disponible (reserva) de forma transaccional; stock <6 dispara la alerta visual.
 - [ ] Carritos guest tienen límite de 3 unidades/SKU y 10 productos distintos; rate limit de 1 req/s con burst de 5 y techo de 1 sesión guest activa / máx. 15 unidades por IP (ADR 0016).
 - [ ] Los productos con oferta activa aparecen siempre en la sección superior del carrito.
-- [ ] Al vencer el TTL de reserva, el job programado libera el stock y purga el carrito (PA-01 pendiente: duración base).
+- [ ] Al vencer el TTL de reserva (24 horas), el job programado libera el stock y purga el carrito (PA-01).
 - [ ] Si el carrito contiene productos con `requiere_receta = true`, el checkout bloquea el pago hasta que el usuario adjunte su receta médica (vía OCR o subida de documento, W-03).
 
 ### OCR de receta
@@ -128,11 +128,16 @@ Entidades principales (ver ADR 0003):
 ### Contingencia de stock manual
 - [ ] El backoffice permite alta y edición total de producto (todos los campos del PRD) y actualización directa de existencias.
 
-## Riesgos técnicos abiertos
+## Puntos Abiertos resueltos (PRD v1.6 / v1.7 / v1.8)
 
-- **PA-01 (reserva):** duración exacta del TTL de reserva base antes del checkout — a definir con PM/BA.
-- **PA-02 ("Precios bajos"):** criterio de activación del flag comercial (asignación manual por operador en catálogo vs. regla calculada por margen/precio de referencia) — a definir con PM/BA.
-- **PA-03 (OCR mixto):** comportamiento con recetas que mezclan medicamentos con y sin stock — a definir con PM/BA.
-- **PA-04 (reclamos):** formalizado en ADR 0003 mediante pedidos de reposición derivados con `tipo = 'reposicion'`.
-- **PA-05 (reportería):** la "matriz de reportería del Backoffice" mencionada en el changelog no está en el alcance — decidir si se incorpora como RF.
+- **PA-01 (reserva de stock):** **RESUELTO (v1.6).** TTL de reserva de **24 horas** con liberación automática por timeout/expiracion (ADR 0011).
+- **PA-02 ("Precios bajos"):** **RESUELTO (v1.6).** Asignación **manual** de la etiqueta por el operador/farmacéutico en la ficha del producto (sin regla calculada).
+- **PA-03 (OCR stock mixto):** **RESUELTO (v1.6).** Se **descarta la inserción parcial**; si falta cualquier medicamento, se suspende toda la receta y se alertan los faltantes (ADR 0008).
+- **PA-04 (reclamos):** **RESUELTO (v1.6).** Reclamos como **sub-flujo posterior manual** tras `Entregado`, sin estados adicionales (ADR 0003).
+- **PA-05 (reportería):** **RESUELTO (v1.6).** La Matriz de Reportería del Backoffice se incorpora al alcance mediante **RF-08** (ADR 0020).
+- **PA-06 (reserva por tipo de sesión):** **RESUELTO (v1.7).** El cliente **guest** reserva solo al llegar al checkout; el **autenticado** reserva al agregar al carrito; ambos con TTL de 24h y liberación automática (RF-03.5, ADR 0016).
+- **PA-07 (parámetros anti-abuso de reserva):** **RESUELTO (v1.8).** Límites de cara al cliente (3 unidades/SKU, 10 productos guest) y controles técnicos (1 req/s con burst 5 al agregar, 3 inicios de checkout por minuto por IP, techo de 1 checkout guest activo con reservas o máx. 15 unidades por IP) (RF-03.6, ADR 0016).
+
+## Riesgos técnicos restantes
+
 - **Disponibilidad 99.5% en un solo nodo** (ADR 0014): el KPI queda expuesto a punto único de fallo físico; respaldos y recuperación delegados a fase de operaciones.

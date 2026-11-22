@@ -4,12 +4,16 @@
 
 Aceptado
 
+## Ámbito
+
+Transversal — bus de eventos compartido por despacho (HU-08), OCR (HU-06), correo (HU-01/02/08) y catálogo (HU-03).
+
 ## Contexto
 
 `AGENTS.md` obliga a desacoplar los flujos asíncronos por un "broker de mensajería local" (RabbitMQ
 o Mosquitto) y menciona hilos asíncronos o Celery sobre Windows para tareas en segundo plano. Los
 flujos a desacoplar son: pedido confirmado → despacho, OCR → resultado, envío de correos
-(contraseña provisional, recuperación) y purga de carritos abandonados. El usuario evaluó Kafka y
+(link de activación de un solo uso, recuperación) y purga de carritos abandonados. El usuario evaluó Kafka y
 lo descartó por no correr nativo en Windows y por su consumo de RAM (en contra de `AGENTS.md` §9).
 
 ## Decisión

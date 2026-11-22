@@ -11,6 +11,7 @@ Para resolver incidencias de calidad de forma segura y transparente, respetando 
   - RF-04.1 (*El sistema permitirá registrar reclamos por mal estado obligando a adjuntar la foto del producto dañado y el comprobante. Esto disparará la orden de despacho de un motorizado con un producto de reemplazo*).
   - RF-04.2 (*El sistema bloqueará cualquier opción de reembolso o devolución de dinero, tanto en la interfaz del cliente como en la del administrador*).
   - RF-04.3 (*El sistema permitirá registrar hasta un máximo de 3 intentos adicionales secuenciales de cambio en campo administrados por la hoja de ruta del motorizado antes de marcar la incidencia como escalada o cerrada*).
+  - RF-04.4 (*El flujo de reclamos opera como un sub-flujo posterior manual e independiente una vez que la orden alcanza el estado Entregado, sin crear estados adicionales en el ciclo de vida del pedido*).
 - **Criterios de éxito y RNF asociados:** RNF-02 (*Cumplimiento de LPDP y protección de evidencias adjuntas*), Criterio de éxito — Eficiencia Operativa (*Disminución del 30% en el volumen de atención manual y resolución estructurada de incidencias según Sección 8 del PRD*), AGENTS.md (*Inmutabilidad de eventos y trazabilidad en logística inversa*).
 - **Cobertura:** Formulario de registro de reclamo para el cliente con adjunción obligatoria de foto del producto dañado y comprobante de pago, generación de orden de reposición para motorizado propio, verificación física presencial en domicilio (comprobante original, pertenencia a Botica la Luz y evidencia de deterioro), control de hoja de ruta con hasta 3 intentos adicionales de cambio físico ante fallas sucesivas, y bloqueo total de opciones de devolución de dinero en todos los perfiles de usuario.
 
@@ -36,7 +37,10 @@ Para resolver incidencias de calidad de forma segura y transparente, respetando 
      - Si se agota el 3er intento adicional sin lograr una entrega conforme, el sistema bloquea nuevos despachos automáticos y marca el reclamo como "Escalado a supervisión" para resolución gerencial.
 5. **Política estricta de Cero Reembolsos (No Reembolso):**
    - El sistema bloquea a nivel de código y base de datos cualquier opción de reembolso, extorno o devolución de dinero en efectivo o digital, tanto en la interfaz del cliente como en el panel de control del administrador.
-   - Si el cliente argumenta equivocación o arrepentimiento en su compra, el sistema no admite el trámite de reclamo ni de cambio.
+    - Si el cliente argumenta equivocación o arrepentimiento en su compra, el sistema no admite el trámite de reclamo ni de cambio.
+6. **Sub-flujo posterior manual tras la entrega (PA-04):**
+   - El flujo de reclamos por mal estado opera como un sub-flujo posterior, manual e independiente, y solo puede iniciarse una vez que la orden ha alcanzado el estado `Entregado`.
+   - No altera los 4 estados base del pedido (`Registrado`, `Preparando producto`, `En camino`, `Entregado`) ni crea estados adicionales en su ciclo de vida; el reclamo gestiona su propia entidad de logística inversa vinculada a la orden original.
 
 ## Escenarios Gherkin
 
@@ -72,9 +76,8 @@ Feature: Gestión de reclamos y logística inversa en campo
 - **Identidad del producto de reemplazo:** Se asume que el producto de reemplazo preparado en botica corresponde al mismo medicamento y presentación del comprobante original.
 - **Validación síncrona en campo:** Se asume que la comprobación física de comprobante y pertenencia a la botica es efectuada presencialmente por el motorizado de manera sincrónica al momento de la entrega en domicilio.
 
-## Puntos Abiertos
-- **PA-04 — Reclamos en el ciclo de vida:** ¿El flujo de reclamos por mal estado debe reflejarse con uno o más estados adicionales en el ciclo de vida del pedido, o se gestiona como un sub-flujo independiente posterior a la entrega?  
-  *(Pregunta exacta a negocio: Se requiere definir si el reclamo impacta directamente en el estado de la orden original o si se apertura una entidad independiente de logística inversa vinculada a la orden).*
+## Puntos Abiertos (Resueltos)
+- **PA-04 — Reclamos en el ciclo de vida:** RESUELTO (31/10/2026). Los reclamos por mal estado se gestionan como un **sub-flujo posterior manual e independiente** tras la recepción del pedido en estado `Entregado`. El reclamo no impacta directamente el estado de la orden original ni crea estados adicionales; se apertura una entidad independiente de logística inversa vinculada a la orden.
 
 ## Exclusiones ("No incluye")
 - **Devolución de dinero en efectivo o extornos:** Cláusula cerrada de cero reembolsos por error de cliente o insatisfacción (Sección 3.2 del PRD y RF-04.2).

@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Transversal — modelo de datos compartido por todas las historias de usuario.
+
 ## Contexto
 
 El PRD describe, de forma explícita o implícita, las entidades que el sistema debe persistir para

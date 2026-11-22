@@ -27,7 +27,8 @@ Para optimizar los tiempos de entrega de medicamentos, ordenar las salidas de lo
      1. `Registrado`: Orden confirmada y pagada, a la espera de preparación.
      2. `Preparando producto`: El equipo de botica selecciona y empaqueta físicamente los medicamentos e insumos.
      3. `En camino`: El motorizado retira el paquete empaquetado e inicia la ruta hacia la dirección del cliente.
-     4. `Entregado`: El motorizado culmina la entrega física al cliente en su domicilio.
+      4. `Entregado`: El motorizado culmina la entrega física al cliente en su domicilio.
+   - **Sub-flujo de reclamos (PA-04):** El flujo de reclamos por mal estado no introduce estados adicionales en esta máquina de estados. Se gestiona como un sub-flujo posterior manual e independiente una vez que el pedido alcanza `Entregado`, dejando los 4 estados como los únicos del ciclo de vida del pedido.
 5. **Restricción de transiciones arbitrarias:**
    - El sistema impide saltos de estado incongruentes (por ejemplo, no se puede marcar `Entregado` una orden que está en `Registrado` sin haber pasado por `Preparando producto` y `En camino`).
    - Cada cambio de estado almacena fecha, hora exacta y el identificador del usuario responsable (auditoría y trazabilidad).
@@ -63,9 +64,8 @@ Feature: Buzón de despacho logístico y ciclo de vida de pedidos
 ## Supuestos
 - **Consolidación por distritos y zonas:** Se asume que la consolidación por cercanía geográfica opera agrupando los pedidos confirmados por sectores, distritos o zonas de cobertura de la botica para facilitar el armado de hojas de ruta de los motorizados.
 
-## Puntos Abiertos
-- **PA-04 — Reclamos en el ciclo de vida:** ¿El flujo de reclamos por mal estado debe reflejarse con uno o más estados adicionales en el ciclo de vida del pedido (por ejemplo: *En reclamo*, *Reemplazo en camino*), o se gestiona como un sub-flujo independiente posterior al estado `Entregado`?  
-  *(Pregunta exacta a negocio: Se requiere confirmar si los 4 estados descritos en RF-07.3 son los únicos del pedido principal o si la incidencia de reclamo añade estados transaccionales al ciclo de vida global).*
+## Puntos Abiertos (Resueltos)
+- **PA-04 — Reclamos en el ciclo de vida:** RESUELTO (31/10/2026). Los reclamos por mal estado se gestionan como un **sub-flujo posterior manual e independiente** tras la recepción del pedido en estado `Entregado`. No se crean estados adicionales en la máquina de estados del pedido; los 4 estados definidos en RF-07.3 son los únicos del pedido principal.
 
 ## Exclusiones ("No incluye")
 - Seguimiento telemático con GPS en tiempo real de la motocicleta sobre mapa satelital interactivo en la vista del cliente.

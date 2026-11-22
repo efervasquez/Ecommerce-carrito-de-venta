@@ -18,14 +18,14 @@
   "messages": [
     { "id": "m1", "from": "cliente", "to": "spa", "y": 160, "label": "pagar carrito" },
     { "id": "m2", "from": "spa", "to": "api", "y": 190, "label": "POST /api/v1/checkout", "variant": "emphasis" },
-    { "id": "m3", "from": "api", "to": "mysql", "y": 220, "label": "BEGIN · crear pedido · reservar stock" },
+    { "id": "m3", "from": "api", "to": "mysql", "y": 220, "label": "validar stock · reservar (guest) / prorrogar (autenticado)" },
     { "id": "m4", "from": "mysql", "to": "api", "y": 250, "label": "ok", "variant": "return" },
     { "id": "m5", "from": "api", "to": "stripe", "y": 285, "label": "crear PaymentIntent", "variant": "security" },
     { "id": "m6", "from": "stripe", "to": "api", "y": 315, "label": "client_secret", "variant": "return" },
     { "id": "m7", "from": "api", "to": "spa", "y": 345, "label": "200 · client_secret", "variant": "return" },
     { "id": "m8", "from": "spa", "to": "cliente", "y": 375, "label": "mostrar pasarela", "variant": "return" },
     { "id": "m9", "from": "stripe", "to": "api", "y": 430, "label": "webhook payment.succeeded", "variant": "security" },
-    { "id": "m10", "from": "api", "to": "mysql", "y": 475, "label": "COMMIT · confirmar pago + stock", "variant": "emphasis" },
+    { "id": "m10", "from": "api", "to": "mysql", "y": 475, "label": "BEGIN · crear pedido + pago · confirmar deducción stock · COMMIT", "variant": "emphasis" },
     { "id": "m11", "from": "mysql", "to": "api", "y": 525, "label": "ok", "variant": "return" },
     { "id": "m12", "from": "api", "to": "rabbitmq", "y": 555, "label": "evento pedido.confirmado", "variant": "dashed" },
     { "id": "m13", "from": "api", "to": "spa", "y": 585, "label": "orden confirmada", "variant": "return" }
@@ -39,7 +39,11 @@
     { "participant": "rabbitmq", "from": 550, "to": 560, "type": "messagebus" }
   ],
   "cards": [
-    { "dot": "emerald", "title": "Camino feliz", "items": ["El pedido se crea con stock reservado antes de cobrar.", "El pago se confirma por webhook y cierra en una única transacción MySQL."] },
+    { "dot": "emerald", "title": "Dos fases (ADR 0013)", "items": [
+      "Fase 1 (checkout): sin TX larga; se valida stock y se reserva (guest) o prorroga (autenticado). NO se crea el pedido.",
+      "Fase 2 (webhook): crear pedido + pago y confirmar deducción de stock en una única TX MySQL corta (<100ms).",
+      "Reserva por tipo de carrito (ADR 0016): guest reserva solo en checkout; autenticado prorroga la reserva previa (ADR 0011)."
+    ]},
     { "dot": "rose", "title": "Idempotencia", "items": ["Un webhook reintentado con la misma idempotency_key no produce doble cargo ni doble decremento de stock (ADR 0013)."] },
     { "dot": "amber", "title": "Desacople", "items": ["Tras confirmar, se publica pedido.confirmado a RabbitMQ para disparar el despacho (ADR 0007).", "No hay reembolsos en ninguna interfaz (RF-04.2)."] }
   ]

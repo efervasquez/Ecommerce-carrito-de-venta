@@ -20,9 +20,9 @@ Para que el sistema extraiga automáticamente los medicamentos y cantidades, val
 4. **Flujo automatizado exitoso con redirección:** Si la botica cuenta con stock suficiente de todos y cada uno de los medicamentos identificados en la receta médica:
    - El sistema los inserta de manera automática en el carrito de compras del cliente con las cantidades prescritas.
    - Redirige directamente al cliente a la vista del carrito de compras para que pueda revisar los ítems y continuar inmediatamente hacia el pago.
-5. **Alerta de quiebre de stock y suspensión:** Si la botica no cuenta con stock disponible de alguno de los medicamentos extraídos por el OCR:
-   - El sistema suspende la inserción automática.
-   - Despliega en pantalla una alerta clara y explícita notificando al cliente cuál o cuáles medicamentos específicos carecen de existencias en el inventario.
+5. **Descarte de inserción parcial ante stock mixto o insuficiente (PA-03):** Si la botica no cuenta con stock disponible de alguno de los medicamentos extraídos por el OCR — incluyendo el caso de disponibilidad parcial con stock mixto (algunos fármacos con existencias y otros sin ellas):
+   - El sistema descarta la inserción parcial automática y suspende el ingreso de la receta completa al carrito, sin cargar los productos que sí tienen existencias.
+   - Despliega en pantalla una alerta clara y explícita notificando al cliente cuál o cuáles medicamentos específicos carecen de existencias en el inventario, para que tome una decisión informada.
 
 ## Escenarios Gherkin
 
@@ -52,12 +52,24 @@ Feature: Automatización OCR de recetas médicas
     And no redirige al carrito de compras
 ```
 
+### Escenario 3 — Caso borde: Receta con stock mixto que descarta la inserción parcial
+```gherkin
+Feature: Automatización OCR de recetas médicas
+  Scenario: Receta con algunos medicamentos disponibles y otros agotados descarta la inserción parcial
+    Given que el cliente pulsa en "Leer receta"
+    When adjunta una receta que prescribe "Amoxicilina 500mg (10 unidades)" y "Claritromicina 500mg (14 unidades)"
+    Then el motor OCR detecta ambos medicamentos con sus cantidades
+    And el sistema consulta el inventario y comprueba que "Amoxicilina 500mg" cuenta con stock suficiente pero "Claritromicina 500mg" está agotado
+    Then el sistema descarta la inserción parcial automática y suspende el ingreso de toda la receta al carrito
+    And no carga "Amoxicilina 500mg" en el carrito
+    And muestra una alerta explícita indicando que falta stock de "Claritromicina 500mg" para completar la receta
+```
+
 ## Supuestos
 - **Formatos y legibilidad documental:** Se asume que el procesamiento OCR soporta formatos de archivo estándar web (PDF, JPG, PNG) con resolución legible suficiente para identificar principios activos, marcas y cantidades prescritas.
 
-## Puntos Abiertos
-- **PA-03 — OCR con stock mixto:** Ante una receta con medicamentos con y sin stock disponible, ¿el sistema inserta los productos disponibles y alerta solo los faltantes, o suspende la inserción de toda la receta?  
-  *(Pregunta exacta a negocio: Se requiere confirmar si ante disponibilidad parcial se debe cargar al carrito lo que sí tiene existencias alertando los faltantes, o si se mantiene la regla restrictiva actual de suspender completamente la inserción de toda la receta).*
+## Puntos Abiertos (Resueltos)
+- **PA-03 — OCR con stock mixto:** RESUELTO (31/10/2026). Se **descarta la funcionalidad de inserción parcial**. Ante una receta con stock mixto (algunos medicamentos disponibles y otros no), el sistema suspende la inserción completa de la receta al carrito y alerta explícitamente al cliente los ítems faltantes, para evitar compras incompletas inadvertidas.
 
 ## Exclusiones ("No incluye")
 - **Consultas Médicas Online / Telemedicina:** No incluye prescripción médica virtual ni consulta diagnóstica interactiva con doctores (Sección 3.2 del PRD).

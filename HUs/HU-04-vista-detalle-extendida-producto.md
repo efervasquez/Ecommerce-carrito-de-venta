@@ -23,7 +23,7 @@ Para consultar su información clínica completa (contraindicaciones, advertenci
      - Contraindicaciones de uso.
      - Precauciones y advertencias especiales.
      - Reacciones adversas conocidas.
-   - **Etiqueta informativa adicional:** Indicador de "Precios bajos" (si aplica al producto).
+   - **Etiqueta informativa adicional:** Indicador de "Precios bajos" (si aplica al producto; asignada manualmente por el operador/farmacéutico en el catálogo/Backoffice — PA-02).
 3. **Acción de compra desde detalle:** La vista debe incluir un control de selección de cantidad numérica y un botón "Agregar al carrito", validando en tiempo real que la cantidad elegida no sobrepase el stock disponible del producto.
 
 ## Escenarios Gherkin
@@ -56,10 +56,10 @@ Feature: Vista de detalle del producto
 
 ## Supuestos
 - **Acción de compra en vista de detalle (extensión operativa):** Aunque RF-02.3 enumera prioritariamente los campos informativos y clínicos obligatorios de la ficha, se asume como extensión operativa estándar de e-commerce la inclusión del selector de cantidad y el botón "Agregar al carrito" en esta vista para permitir la conversión directa del cliente sin obligarlo a retornar a la lista de búsqueda.
+- **Activación manual de la etiqueta "Precios bajos" (PA-02):** Confirmado por el Product Owner el 31/10/2026 — la etiqueta se muestra en la vista de detalle únicamente cuando el operador/farmacéutico la ha activado manualmente en la ficha del producto; no deriva de una regla automática.
 
-## Puntos Abiertos
-- **PA-02 — Etiqueta "Precios bajos":** ¿Qué criterio activa la etiqueta "Precios bajos" en un producto?  
-  *(Aplica a la visualización de la etiqueta comercial en la vista de detalle; sin asumir si es manual desde Backoffice o derivada de una regla automática).*
+## Puntos Abiertos (Resueltos)
+- **PA-02 — Etiqueta "Precios bajos":** RESUELTO (31/10/2026). La etiqueta se muestra en la vista de detalle según la asignación manual realizada por el operador/farmacéutico en el catálogo/Backoffice.
 
 ## Exclusiones ("No incluye")
 - **Consultas Médicas Online / Telemedicina:** No incluye chats médicos en vivo, consultas de diagnóstico médico online ni recomendaciones farmacológicas automatizadas por IA (Sección 3.2 del PRD).

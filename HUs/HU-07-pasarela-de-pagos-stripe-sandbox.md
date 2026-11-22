@@ -7,8 +7,11 @@ Para completar mi compra digital de medicamentos de manera rápida, segura y con
 
 ## Alcance específico de la HU
 - **Sección del PRD:** 3. Alcance (3.1 Lo que INCLUYE — Pasarela de Pagos Integrada; 3.2 Lo que NO INCLUYE — Devolución de dinero en efectivo o extornos), 4. Personas y Actores (Cliente Final), 5. Requerimientos Funcionales (RF-06: Pasarela de Pagos Integrada — RF-06.1).
-- **Requerimientos Funcionales asociados:** RF-06.1 (*El sistema integrará una pasarela de pagos mediante Stripe operando en Modo Test [Sandbox] para el entorno MVP*).
-- **Criterios de éxito y RNF asociados:** RNF-01 (*Tiempo de respuesta <= 2.5s y estabilidad bajo concurrencia*), RNF-02 (*Cifrado SSL/TLS de extremo a extremo, cumplimiento de PCI-DSS y LPDP*), RNF-03 (*Disponibilidad mínima de 99.5% 24/7*), Criterio de éxito — Penetración Digital (*Al menos el 25% de la facturación global proveniente de ventas web según Sección 8 del PRD*), Criterio de éxito — Estabilidad del Sistema (*Disponibilidad mínima del 99.5% 24/7*), AGENTS.md (*Patrón Saga o transacciones MySQL nativas para flujos de pasarela de pagos y liberación de stock; prohibición estricta de almacenar contraseñas o tarjetas de crédito en texto plano o logs*).
+- **Requerimientos Funcionales asociados:**
+  - RF-06.1 (*El sistema integrará una pasarela de pagos mediante Stripe operando en Modo Test [Sandbox] para el entorno MVP*).
+  - RF-03.5 (*Reserva de stock por tipo de sesión: el invitado [guest] reserva únicamente al iniciar el checkout, que es el punto de entrada de esta HU — PA-06*).
+  - RF-03.6 (*Límites anti-abuso de checkout: 3 inicios de checkout por minuto por IP y techo de 1 checkout guest activo con reservas [o máx. 15 unidades] por IP — PA-07*).
+- **Criterios de éxito y RNF asociados:** RNF-01 (*Tiempo de respuesta <= 2.5s y estabilidad bajo concurrencia*), RNF-02 (*Cifrado SSL/TLS de extremo a extremo y cumplimiento estricto de la LPDP*), RNF-03 (*Disponibilidad mínima de 99.5% 24/7*), Criterio de éxito — Penetración Digital (*Al menos el 25% de la facturación global proveniente de ventas web según Sección 8 del PRD*), Criterio de éxito — Estabilidad del Sistema (*Disponibilidad mínima del 99.5% 24/7*), AGENTS.md (*Patrón Saga o transacciones MySQL nativas para flujos de pasarela de pagos y liberación de stock; prohibición estricta de almacenar contraseñas o tarjetas de crédito en texto plano o logs*).
 - **Cobertura:** Componente seguro de pago embebido (Stripe Elements) en modo pruebas (Test/Sandbox), procesamiento transaccional del cobro con tarjetas de crédito/débito, confirmación de orden de compra, descuento definitivo de stock reservado, asignación del estado inicial `Registrado` en el ciclo de vida del pedido y pantalla de confirmación con número de pedido.
 
 ## Criterios de aceptación funcionales
@@ -31,6 +34,10 @@ Para completar mi compra digital de medicamentos de manera rápida, segura y con
      - Mantiene los productos en el carrito de compras para permitir un nuevo intento con otro método de pago.
 5. **Inmutabilidad transaccional y política de no reembolsos:**
    - Una vez confirmado el pago, no existen opciones para que el cliente ni el operador soliciten extornos o reembolsos de dinero en la pasarela (política estricta de cero devoluciones monetarias según Sección 3.2 y RF-04.2).
+6. **Reserva del guest y controles anti-abuso en el checkout (PA-06 / PA-07):**
+   - Al iniciar el checkout, el cliente **invitado (guest)** genera la reserva de stock de los productos de su carrito (no antes); el cliente **autenticado** ya cuenta con reserva previa desde el agregado al carrito.
+   - El inicio de checkout está limitado a **3 por minuto por IP**; el sistema rechaza los inicios que excedan el límite con un aviso de reintento.
+   - Se permite un techo de **1 checkout guest activo con reservas** (o como máximo **15 unidades reservadas**) por IP.
 
 ## Escenarios Gherkin
 
@@ -59,12 +66,24 @@ Feature: Pasarela de pagos Stripe Sandbox
     And muestra una notificación en pantalla indicando "Su pago fue rechazado por saldo insuficiente. Por favor intente con otra tarjeta"
 ```
 
+### Escenario 3 — Caso borde: Guest inicia checkout y genera la reserva de stock en ese momento
+```gherkin
+Feature: Pasarela de pagos Stripe Sandbox
+  Scenario: Guest llega al checkout sin reserva previa y el sistema reserva el stock
+    Given que un cliente invitado (guest) tiene productos en su carrito sin stock reservado
+    When el guest inicia el checkout
+    Then el sistema genera la reserva de stock de los productos del carrito con vigencia de 24 horas
+    And permite al guest continuar al formulario de pago de Stripe
+```
+
 ## Supuestos
 - **Operación en entorno Sandbox:** Se asume que para el MVP todas las transacciones de pago son procesadas exclusivamente con credenciales y tarjetas de prueba de Stripe en Modo Test, sin liquidación ni cargos bancarios reales.
+- **Reserva del guest en checkout (PA-06):** Confirmado el 31/10/2026 — la reserva de stock del cliente invitado se materializa al iniciar el checkout, antes de presentar el formulario de Stripe.
 
-## Puntos Abiertos
-- **PA-01 — Reserva de stock:** ¿Cuál es la duración exacta de la sesión/reserva de stock y la regla de liberación automática (inactividad, abandono o timeout)?  
-  *(Afecta al tiempo límite disponible que tiene el cliente para completar el formulario de Stripe antes de que el stock reservado expire y sea liberado para otros usuarios).*
+## Puntos Abiertos (Resueltos)
+- **PA-01 — Reserva de stock:** RESUELTO (31/10/2026). La reserva de stock queda establecida en **24 horas**. El cliente dispone de ese lapso para completar el formulario de Stripe antes de que el stock reservado expire y sea liberado automáticamente para otros usuarios.
+- **PA-06 — Reserva de stock por tipo de sesión:** RESUELTO (31/10/2026). El cliente **invitado (guest)** reserva únicamente al iniciar el checkout; el **autenticado** reserva al agregar al carrito (RF-03.5).
+- **PA-07 — Parámetros anti-abuso de reserva:** RESUELTO (31/10/2026). 3 inicios de checkout por minuto por IP y techo de 1 checkout guest activo con reservas (o máx. 15 unidades) por IP, aplicables a esta HU (RF-03.6).
 
 ## Exclusiones ("No incluye")
 - Pagos contra entrega en efectivo o cobros presenciales con terminal POS físico (despacho exclusivo con pago previo confirmado vía Stripe en web).

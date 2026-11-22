@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Transversal — gestión de estado del frontend para toda la aplicación.
+
 ## Contexto
 
 El frontend React debe manejar dos tipos de estado: el estado de servidor (catálogo con scroll

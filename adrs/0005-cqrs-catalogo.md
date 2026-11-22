@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Historia de usuario — HU-03 (Búsqueda difusa y catálogo) y HU-10 (Contingencia de stock).
+
 ## Contexto
 
 `AGENTS.md` §5 fija CQRS como patrón obligatorio: "separar lecturas de escrituras en el catálogo".

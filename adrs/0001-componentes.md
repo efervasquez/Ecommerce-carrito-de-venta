@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Transversal — aplica a todo el sistema (arquitectura de componentes y workers).
+
 ## Contexto
 
 El `AGENTS.md` manda una arquitectura orientada a eventos (EDA) con "microservicios locales"

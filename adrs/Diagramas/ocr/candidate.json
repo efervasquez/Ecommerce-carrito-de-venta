@@ -40,7 +40,7 @@
   ],
   "cards": [
     { "dot": "emerald", "title": "Camino feliz", "items": ["El OCR corre en un worker asíncrono, fuera del request HTTP.", "Con stock completo, se añaden los ítems y se redirige al carrito (RF-03.1)."] },
-    { "dot": "rose", "title": "Quiebre de stock", "items": ["Si falta algún medicamento, se detiene la inserción y se alerta el faltante (RF-03.2).", "PA-03 abierto: comportamiento con stock mixto (insertar disponibles vs. suspender toda la receta)."] },
+    { "dot": "rose", "title": "Quiebre de stock", "items": ["Si falta algún medicamento, se detiene la inserción y se alerta el faltante (RF-03.2).", "PA-03 resuelto: se descarta la inserción parcial; si falta cualquier medicamento se suspende toda la receta."] },
     { "dot": "amber", "title": "Dato de salud", "items": ["La receta es dato de salud: se trata con retención mínima (ADR 0015).", "Tesseract puede degradarse con manuscrito: requiere validación humana ante baja confianza."] }
   ]
 }

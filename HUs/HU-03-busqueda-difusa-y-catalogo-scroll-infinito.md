@@ -26,7 +26,7 @@ Para encontrar rápidamente productos con su información esencial (foto, compon
    - Componentes principales (principios activos).
    - Precio regular en moneda local.
    - Porcentaje de descuento por oferta (únicamente si el producto cuenta con una promoción u oferta activa).
-   - Indicador visual especial: alerta de stock bajo cuando las existencias disponibles sean estrictamente menores a 6 unidades (`stock < 6`), O la etiqueta distintiva de "Precios bajos".
+   - Indicador visual especial: alerta de stock bajo cuando las existencias disponibles sean estrictamente menores a 6 unidades (`stock < 6`), O la etiqueta distintiva de "Precios bajos" (asignada manualmente por el operador/farmacéutico en la ficha del producto desde el catálogo/Backoffice — PA-02).
    - Botón directo y accesible: "Agregar al carrito".
 4. **Adición directa al carrito de compras:** Al hacer clic en el botón "Agregar al carrito" de la tarjeta, el producto se añade de inmediato a la sesión activa del carrito del cliente, actualizando el contador global sin interrumpir la navegación ni sacar al cliente del catálogo.
 
@@ -57,10 +57,10 @@ Feature: Búsqueda y catálogo en scroll infinito
 
 ## Supuestos
 - **Alcance del motor difuso:** Se asume que el algoritmo de búsqueda difusa (*Fuzzy Search*) indexa y compara tanto el nombre comercial del medicamento como sus componentes (principios activos), asegurando la localización del producto aún ante errores de tipeo.
+- **Activación manual de la etiqueta "Precios bajos" (PA-02):** Confirmado por el Product Owner el 31/10/2026 — la etiqueta es de asignación manual por el operador o farmacéutico directamente en la ficha del producto; no responde a umbrales automáticos de precio ni a comparadores de mercado.
 
-## Puntos Abiertos
-- **PA-02 — Etiqueta "Precios bajos":** ¿Qué criterio activa la etiqueta "Precios bajos" en un producto?  
-  *(Pregunta exacta a negocio: Se requiere definir si la activación de la etiqueta "Precios bajos" responde a una marca manual configurada por el operador en el Backoffice, a un umbral automático por rango de precio respecto a la categoría, o a un comparador de mercado; actualmente no asumido por conveniencia).*
+## Puntos Abiertos (Resueltos)
+- **PA-02 — Etiqueta "Precios bajos":** RESUELTO (31/10/2026). La etiqueta es de asignación **manual** por el operador o farmacéutico, activada o desactivada directamente en la ficha del producto desde el catálogo/Backoffice.
 
 ## Exclusiones ("No incluye")
 - Paginación tradicional con controles de número de página ("Página 1, 2, 3") o botones "Siguiente / Anterior" (excluido explícitamente en el Alcance 3.1).

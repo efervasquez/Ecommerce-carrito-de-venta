@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "870b2468-1ce2-4e1e-9dff-d6ba47934849",
+  "deliveryReceiptId": "f451415d-894c-4d70-9718-5329696fbb57",
   "artifact": {
     "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\ocr\\ocr-receta.html",
-    "sha256": "c15ae7c8deec381132266542138cc1cfc7095b380bca6710f87fdc311306ad27",
-    "bytes": 820562
+    "sha256": "e1d8a3cbae04c5d1da3975e26b2095d3577f01a320e34987ee77d367c76c753f",
+    "bytes": 820573
   },
   "state": {
     "detail": "read",

@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Transversal — sesión, carrito y cache de lecturas compartidos por varias historias.
+
 ## Contexto
 
 `AGENTS.md` §3 lista "carritos y sesiones" dentro de MySQL y §9 prohíbe desperdiciar memoria en

@@ -4,6 +4,10 @@
 
 Aceptado
 
+## Ámbito
+
+Historia de usuario — HU-01 (Autoregistro), HU-02 (Recuperación) y HU-08 (confirmación de pedido).
+
 ## Contexto
 
 El sistema depende del envío de correos para los flujos más básicos del MVP: activación de cuenta

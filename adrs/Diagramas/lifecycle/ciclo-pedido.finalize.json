@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "lifecycle",
   "quality": "showcase",
-  "startedAt": "2026-10-15T06:11:08.311Z",
+  "startedAt": "2026-11-01T01:49:49.096Z",
   "specification": {
     "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\lifecycle\\candidate.json",
-    "sha256": "8d569e08d73c4128aede76996a46d6d55d61ca3ad8092467adf8c5f45e136359",
-    "bytes": 3190
+    "sha256": "343cb0c576ef25b3720adcdd61f1a6af49faf99807a9c01992bc739bf9729ad0",
+    "bytes": 3232
   },
   "artifact": {
     "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\lifecycle\\ciclo-pedido.html",
-    "sha256": "a5141edf16d631b1664822885088baa44a8338f788408df454c484f7504b6159",
-    "bytes": 822342
+    "sha256": "9a30fadf4426f32a566c67e9f9848d16509da4f5efc8959d614ed7e37990516a",
+    "bytes": 822384
   },
   "stages": {
     "validate": {
@@ -38,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "8d569e08d73c4128aede76996a46d6d55d61ca3ad8092467adf8c5f45e136359",
-          "bytes": 3190
+          "sha256": "343cb0c576ef25b3720adcdd61f1a6af49faf99807a9c01992bc739bf9729ad0",
+          "bytes": 3232
         },
         "validation": {
           "checksPassed": 9,
@@ -54,7 +54,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1489,
+      "durationMs": 1125,
       "command": [
         "C:\\Program Files\\nodejs\\node.exe",
         "C:\\Users\\EFERX1-CARBON\\.agents\\skills\\archify\\bin\\archify.mjs",
@@ -68,19 +68,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "7fa356f5-faa0-466c-9228-148575577dce",
+        "receiptId": "3ea8db29-a7f0-4519-8e50-83b8250e89a2",
         "ok": true,
         "command": "deliver",
         "type": "lifecycle",
         "input": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\lifecycle\\candidate.json",
         "output": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\lifecycle\\ciclo-pedido.html",
         "specification": {
-          "sha256": "8d569e08d73c4128aede76996a46d6d55d61ca3ad8092467adf8c5f45e136359",
-          "bytes": 3190
+          "sha256": "343cb0c576ef25b3720adcdd61f1a6af49faf99807a9c01992bc739bf9729ad0",
+          "bytes": 3232
         },
         "artifact": {
-          "sha256": "a5141edf16d631b1664822885088baa44a8338f788408df454c484f7504b6159",
-          "bytes": 822342
+          "sha256": "9a30fadf4426f32a566c67e9f9848d16509da4f5efc8959d614ed7e37990516a",
+          "bytes": 822384
         },
         "validation": {
           "checksPassed": 9,
@@ -106,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 578,
+      "durationMs": 360,
       "command": [
         "C:\\Program Files\\nodejs\\node.exe",
         "C:\\Users\\EFERX1-CARBON\\.agents\\skills\\archify\\bin\\archify.mjs",
@@ -118,8 +118,8 @@
         "ok": true,
         "file": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\lifecycle\\ciclo-pedido.html",
         "artifact": {
-          "sha256": "a5141edf16d631b1664822885088baa44a8338f788408df454c484f7504b6159",
-          "bytes": 822342
+          "sha256": "9a30fadf4426f32a566c67e9f9848d16509da4f5efc8959d614ed7e37990516a",
+          "bytes": 822384
         },
         "checks": [
           {
@@ -236,13 +236,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "7fa356f5-faa0-466c-9228-148575577dce"
+        "deliveryReceiptId": "3ea8db29-a7f0-4519-8e50-83b8250e89a2"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 4465,
+      "durationMs": 4091,
       "command": [
         "C:\\Program Files\\nodejs\\node.exe",
         "C:\\Users\\EFERX1-CARBON\\.agents\\skills\\archify\\bin\\archify.mjs",
@@ -260,11 +260,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "7fa356f5-faa0-466c-9228-148575577dce",
+        "deliveryReceiptId": "3ea8db29-a7f0-4519-8e50-83b8250e89a2",
         "artifact": {
           "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\lifecycle\\ciclo-pedido.html",
-          "sha256": "a5141edf16d631b1664822885088baa44a8338f788408df454c484f7504b6159",
-          "bytes": 822342
+          "sha256": "9a30fadf4426f32a566c67e9f9848d16509da4f5efc8959d614ed7e37990516a",
+          "bytes": 822384
         },
         "state": {
           "detail": "read",
@@ -958,16 +958,18 @@
     "browserCheckReceipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\lifecycle\\ciclo-pedido.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-15T06:11:16.312Z",
-  "durationMs": 8000,
+  "finishedAt": "2026-11-01T01:49:56.043Z",
+  "durationMs": 6947,
   "update": {
-    "status": "current",
+    "status": "update_available",
     "installedVersion": "3.1.0",
-    "availableVersion": "3.1.0",
-    "releaseNotes": null,
-    "checkedAt": "2026-10-15T05:45:28.212Z",
+    "availableVersion": "3.2.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.2.0",
+    "severity": "normal",
+    "checkedAt": "2026-11-01T01:31:28.960Z",
     "source": "cache",
-    "noticeRequired": false,
-    "noticeText": null
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.1.0 → 3.2.0. A previous check at 2026-11-01T01:31:28.960Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.2.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "eventKey": "archify@sha256:70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5"
   }
 }

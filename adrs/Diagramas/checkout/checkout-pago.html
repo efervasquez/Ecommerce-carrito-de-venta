@@ -5226,11 +5226,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </g>
         </g>
 
-        <g data-edge-from="api" data-edge-to="mysql" data-edge-label="BEGIN · crear pedido · reservar stock" data-edge-key="2" data-edge-id="m3">
+        <g data-edge-from="api" data-edge-to="mysql" data-edge-label="validar stock · reservar (guest) / prorrogar (autenticado)" data-edge-key="2" data-edge-id="m3">
           <path data-composition-edge-from="api" data-composition-edge-to="mysql" data-composition-edge-id="m3" data-composition-points="407.1,220;534.9000000000001,220" d="M 407.1 220 L 534.9000000000001 220" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <g data-detail="context">
-          <rect x="342.9000000000001" y="200" width="256.2" height="18" rx="3" class="c-mask"/>
-          <text x="471.0000000000001" y="210" class="t-muted" font-size="11" text-anchor="middle">BEGIN · crear pedido · reservar stock</text>
+          <rect x="273.6000000000001" y="200" width="394.79999999999995" height="18" rx="3" class="c-mask"/>
+          <text x="471.00000000000006" y="210" class="t-muted" font-size="11" text-anchor="middle">validar stock · reservar (guest) / prorrogar (autenticado)</text>
         </g>
         </g>
 
@@ -5282,11 +5282,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </g>
         </g>
 
-        <g data-edge-from="api" data-edge-to="mysql" data-edge-label="COMMIT · confirmar pago + stock" data-edge-key="9" data-edge-id="m10">
+        <g data-edge-from="api" data-edge-to="mysql" data-edge-label="BEGIN · crear pedido + pago · confirmar deducción stock · COMMIT" data-edge-key="9" data-edge-id="m10">
           <path data-composition-edge-from="api" data-composition-edge-to="mysql" data-composition-edge-id="m10" data-composition-points="407.1,475;534.9000000000001,475" d="M 407.1 475 L 534.9000000000001 475" class="a-emphasis" data-animate="edge" style="--step:9" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <g data-detail="context">
-          <rect x="362.70000000000005" y="455" width="216.6" height="18" rx="3" class="c-mask"/>
-          <text x="471.00000000000006" y="465" class="t-edge-emphasis" font-size="11" text-anchor="middle">COMMIT · confirmar pago + stock</text>
+          <rect x="253.80000000000007" y="455" width="434.4" height="18" rx="3" class="c-mask"/>
+          <text x="471.00000000000006" y="465" class="t-edge-emphasis" font-size="11" text-anchor="middle">BEGIN · crear pedido + pago · confirmar deducción stock · COMMIT</text>
         </g>
         </g>
 
@@ -5597,11 +5597,12 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       <div class="card">
         <div class="card-header">
           <div class="card-dot emerald"></div>
-          <h3>Camino feliz</h3>
+          <h3>Dos fases (ADR 0013)</h3>
         </div>
         <ul>
-          <li>El pedido se crea con stock reservado antes de cobrar.</li>
-          <li>El pago se confirma por webhook y cierra en una única transacción MySQL.</li>
+          <li>Fase 1 (checkout): sin TX larga; se valida stock y se reserva (guest) o prorroga (autenticado). NO se crea el pedido.</li>
+          <li>Fase 2 (webhook): crear pedido + pago y confirmar deducción de stock en una única TX MySQL corta (&lt;100ms).</li>
+          <li>Reserva por tipo de carrito (ADR 0016): guest reserva solo en checkout; autenticado prorroga la reserva previa (ADR 0011).</li>
         </ul>
       </div>
 

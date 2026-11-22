@@ -33,7 +33,7 @@ Para mantener operativo el catálogo y resguardar la exactitud del stock ante in
    - El operador tiene la facultad de modificar la totalidad de los datos del producto descritos en el PRD:
      - Precios regulares.
      - Marca de oferta activa y asignación del porcentaje de descuento correspondiente.
-     - Asignación de la etiqueta de "Precios bajos".
+      - Asignación manual de la etiqueta de "Precios bajos" (activada o desactivada directamente por el operador/farmacéutico en la ficha del producto — PA-02).
      - Actualización o reemplazo de la fotografía del producto.
      - Modificación del flag de requisito de receta médica.
      - Textos clínicos y sanitarios (contraindicaciones, advertencias, reacciones adversas).
@@ -73,13 +73,11 @@ Feature: Módulo de contingencia de inventario y edición manual
 ## Supuestos
 - **Persistencia local en contingencia:** Se asume que el módulo de contingencia interactúa y escribe directamente en la base de datos MySQL local de la botica, garantizando que el catálogo y el stock permanezcan operativos independientemente del estado de la integración con el ERP.
 
-## Puntos Abiertos
-- **PA-02 — Etiqueta "Precios bajos":** ¿Qué criterio activa la etiqueta "Precios bajos" en un producto?  
-  *(Aplica a la interfaz de edición: si se muestra como un selector manual booleano que el operador activa/desactiva a discreción, o si debe obedecer a una regla del sistema).*
-- **PA-05 — Reportería del Backoffice:** El changelog v1.1 menciona la "matriz de reportería del Backoffice" que no figura en el Alcance. ¿Se incorpora al alcance (y se define su RF) o se elimina la mención del changelog?  
-  *(Pregunta exacta a negocio: Se requiere definir si el Backoffice debe contemplar pantallas formales de reportes de rotación/stock o si queda formalmente fuera del alcance del MVP).*
+## Puntos Abiertos (Resueltos)
+- **PA-02 — Etiqueta "Precios bajos":** RESUELTO (31/10/2026). La etiqueta se asigna de forma **manual** mediante un selector que el operador/farmacéutico activa o desactiva a discreción directamente en la ficha del producto; no obedece a una regla automática del sistema.
+- **PA-05 — Reportería del Backoffice:** RESUELTO (31/10/2026). Se **incorpora formalmente al alcance** del MVP, formalizado a través del requerimiento funcional **RF-08: Reportería y Métricas del Backoffice** (ver HU-11).
 
 ## Exclusiones ("No incluye")
 - Sincronización automática bidireccional en tiempo real con el ERP central (este módulo es exclusivamente el mecanismo de contingencia manual ante caídas de la integración).
 - Módulos de facturación electrónica compleja (SUNAT/declaraciones tributarias) o cuentas corrientes con proveedores (fuera del alcance MVP).
-- Módulo avanzado de Business Intelligence o reportería financiera (sujeto a la resolución del Punto Abierto PA-05).
+- Módulo avanzado de Business Intelligence o reportería financiera predictiva (más allá de los reportes operativos contemplados en RF-08 / HU-11).
