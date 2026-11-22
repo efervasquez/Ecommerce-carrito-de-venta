@@ -12,3 +12,4 @@ NOVALE/
 __pycache__/
 *.pyc
 .venv/
+.env
