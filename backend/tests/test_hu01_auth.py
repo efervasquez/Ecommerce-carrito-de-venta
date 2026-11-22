@@ -79,7 +79,7 @@ async def _rabbit_queue():
     url = os.environ.get("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
     connection = await aio_pika.connect_robust(url)
     channel = await connection.channel()
-    queue = await channel.declare_queue(COLA_EMAIL_AUTH, durable=False)
+    queue = await channel.declare_queue(COLA_EMAIL_AUTH, durable=True)
     return connection, channel, queue
 
 
