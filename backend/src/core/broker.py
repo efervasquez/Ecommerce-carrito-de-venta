@@ -1,5 +1,6 @@
+import json
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 import aio_pika
 from aio_pika.abc import AbstractRobustConnection
 
@@ -37,3 +38,22 @@ async def ping_broker() -> bool:
     except Exception as exc:
         logger.warning(f"Fallo de conectividad con broker RabbitMQ: {exc}")
         return False
+
+
+async def publish_event(queue_name: str, payload: Dict[str, Any]) -> None:
+    """Publica un evento JSON en la cola indicada (cola duradera, entrega persistente).
+
+    Se declara la cola de forma idempotente y se publica en el exchange por defecto
+    usando `queue_name` como routing key (topologia de colas directas segun ADR-0007).
+    """
+    connection = await get_broker_connection()
+    async with connection.channel() as channel:
+        await channel.declare_queue(queue_name, durable=True)
+        await channel.default_exchange.publish(
+            aio_pika.Message(
+                body=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+                content_type="application/json",
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+            ),
+            routing_key=queue_name,
+        )

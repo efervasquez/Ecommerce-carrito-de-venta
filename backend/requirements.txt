@@ -7,3 +7,5 @@ greenlet>=3.0.0
 aiomysql>=0.2.0
 aio-pika>=9.4.2
 alembic>=1.13.2
+pyjwt>=2.8.0
+bcrypt>=4.1.0

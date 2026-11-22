@@ -28,6 +28,15 @@ class Settings(BaseSettings):
         default="amqp://guest:guest@localhost:5672/", alias="RABBITMQ_URL"
     )
 
+    # Seguridad y Autenticacion (ADR-0004, ADR-0017, ADR-0018)
+    jwt_secret: str = Field(
+        default="insecure-dev-secret-cambiar-en-produccion", alias="JWT_SECRET"
+    )
+    jwt_expires_seconds: int = Field(default=3600, alias="JWT_EXPIRES_SECONDS")
+    frontend_base_url: str = Field(
+        default="https://localhost:5173", alias="FRONTEND_BASE_URL"
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
