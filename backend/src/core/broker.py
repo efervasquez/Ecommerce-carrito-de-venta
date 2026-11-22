@@ -40,14 +40,21 @@ async def ping_broker() -> bool:
         return False
 
 
-async def publish_event(queue_name: str, payload: Dict[str, Any]) -> None:
+async def publish_event(
+    queue_name: str, payload: Dict[str, Any], timeout: float = 1.0
+) -> None:
     """Publica un evento JSON en la cola indicada (cola duradera, entrega persistente).
 
-    Se declara la cola de forma idempotente y se publica en el exchange por defecto
-    usando `queue_name` como routing key (topologia de colas directas segun ADR-0007).
+    Usa una conexion de un solo uso con timeout corto (no robusta) para no acoplar la
+    latencia ni el estado del broker a la peticion HTTP que lo invoca: si el broker
+    esta caido, falla en ~1s sin dejar bucles de reconexion en segundo plano. Se
+    declara la cola de forma idempotente y se publica en el exchange por defecto usando
+    `queue_name` como routing key (topologia de colas directas segun ADR-0007).
     """
-    connection = await get_broker_connection()
-    async with connection.channel() as channel:
+    settings = get_settings()
+    connection = await aio_pika.connect(settings.rabbitmq_url, timeout=timeout)
+    async with connection:
+        channel = await connection.channel()
         await channel.declare_queue(queue_name, durable=True)
         await channel.default_exchange.publish(
             aio_pika.Message(

@@ -137,3 +137,28 @@ npm run dev          # http://localhost:5173 -> /registro, /activar, /login
 - **No tocadas:** `backend/tests/**` y `frontend/tests/**` (rutas del TESTER).
 - No se agregaron dependencias no decididas salvo `pyjwt`/`bcrypt` (exigidas por ADR-0004/0017) y
   `react-router-dom` (exigida por las rutas observables del contrato §2/§3.5).
+
+---
+
+## 6. Ajustes por Veredicto (Vuelta 1)
+
+- **Observación del LEAD:** `test_email_duplicado_retorna_mismo_json_y_tiempo_similar` fallaba por
+  divergencia de timing (`nuevo=4.245s` vs `dup=0.207s`). Causa raíz: `_publicar_activacion` hacía
+  `await publish_event(...)` de forma síncrona dentro del request, y `publish_event` usaba
+  `aio_pika.connect_robust(...)` (conexión robusta compartida), que bloquea ~4 s (timeout de
+  conexión) y deja un bucle de reconexión en segundo plano cuando RabbitMQ está caído. El primer
+  registro (email nuevo) pagaba esa latencia; el duplicado (cooldown) no publicaba y era rápido.
+  Se rompía el anti-enumeración de timing exigido por el contrato (§3.1).
+- **Corrección implementada:**
+  - `src/modules/auth/service.py`: `_publicar_activacion` ya no espera el broker; lanza la
+    publicación en segundo plano con `asyncio.create_task(...)` (manteniendo referencia en
+    `self._background_tasks` con `add_done_callback` para evitar garbage collection) y el manejo de
+    errores queda dentro del task. El HTTP 200 del registro ya no depende de la latencia ni del
+    estado del broker.
+  - `src/core/broker.py`: `publish_event` deja de usar la conexión robusta compartida y pasa a una
+    conexión de un solo uso (`aio_pika.connect(..., timeout=1.0)`) que falla rápido (~1 s) y **no**
+    deja bucles de reconexión en segundo plano.
+- **Evidencia de verificación (corrida local con RabbitMQ caído):**
+  - `nuevo -> 200 en 0.258s` / `dup -> 200 en 0.221s` (antes: ~4.245s vs ~0.207s).
+  - El warning de publicación se registra una sola vez desde el task en segundo plano y el proceso
+    termina limpiamente.

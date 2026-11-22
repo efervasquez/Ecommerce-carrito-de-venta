@@ -4,7 +4,7 @@ import re
 import time
 import uuid
 from datetime import timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Set
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -60,6 +60,7 @@ class AuthService:
 
     def __init__(self, repository: Optional[AuthRepository] = None) -> None:
         self.repository = repository or AuthRepository()
+        self._background_tasks: Set[asyncio.Task] = set()
 
     async def solicitar_registro(self, email: str, session: AsyncSession) -> str:
         started = time.monotonic()
@@ -193,8 +194,17 @@ class AuthService:
     async def _publicar_activacion(
         self, email: str, token: str, expira_en
     ) -> None:
+        # La publicacion al broker NO bloquea el request: se lanza en segundo plano
+        # para no acoplar la latencia (ni el estado) de RabbitMQ a la respuesta HTTP,
+        # preservando el anti-enumeracion de timing del contrato (seccion 3.1).
+        payload = self._build_event(email, token, expira_en)
+        task = asyncio.create_task(self._publish_in_background(payload))
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+    async def _publish_in_background(self, payload: Dict[str, Any]) -> None:
         try:
-            await publish_event(QUEUE_EMAIL_AUTH, self._build_event(email, token, expira_en))
+            await publish_event(QUEUE_EMAIL_AUTH, payload)
         except Exception as exc:
             logger.warning(f"No se pudo publicar evento de activacion en RabbitMQ: {exc}")
 
