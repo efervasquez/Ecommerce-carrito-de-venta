@@ -9,15 +9,15 @@
 
 ---
 
-## 1. Dictamen
+## 1. Dictamen final
 
-🟡 **PARCIALMENTE VERIFICADO — pendiente de infraestructura, no de código ni de pruebas.**
+🟢 **APROBADO con 3 casos `NO VERIFICADO` aceptados por el humano.**
 
 - **Frontend (SPA):** 🟢 **13/13 PASS** verificado de primera mano (Vitest).
-- **Backend (API):** 🟢 **7/7 PASS** (casos sin dependencias) · 🔴 **14 FAIL por infraestructura** (MySQL sin usuario de test + RabbitMQ caído) · ⚪ **3 NO VERIFICADO** (no provocables desde la interfaz observable).
+- **Backend HU-01:** 🟢 **21/21 PASS** de los casos ejecutables · ⚪ **3 NO VERIFICADO** (no provocables desde la interfaz observable).
 
-Ninguno de los agentes se apartó de la spec. Los 14 rojos no son fallos de código ni de pruebas: son
-**infraestructura no disponible** que el contrato no define cómo proveer.
+El bug de timing del DEV fue corregido en `b975160`; la prueba de anti-enumeración quedó verde.
+El TESTER corrigió el aislamiento de loops y la durabilidad de `email.auth` en `7c1197b`.
 
 ---
 
@@ -97,16 +97,12 @@ El único hallazgo (`informes/`) es menor y lo originó el encargo del LEAD ("es
 
 ## 4. Evidencia de ejecución (verificación independiente del LEAD)
 
-### Backend — `pytest tests/test_hu01_auth.py`
+### Backend HU-01 — `pytest tests/test_hu01_auth.py`
 ```text
-14 failed, 7 passed, 3 skipped in 35.83s
+21 passed, 3 skipped in 14.19s
 ```
-Causa de los 14 `failed` (transcripción de la salida real):
-- 13 × `sqlalchemy.exc.OperationalError: (1045, "Access denied for user 'test_user'@'localhost'")` — el
-  fixture `default_env` (`backend/tests/conftest.py:22-24`) fija `MYSQL_USER=test_user`,
-  `MYSQL_PASSWORD=test_password`, `MYSQL_DB=test_botica`, que **no existen** en el MySQL92 local.
-- 1 × `aiormq.exceptions.AMQPConnectionError: [WinError 1225]` — RabbitMQ no está corriendo en
-  `localhost:5672` (no hay servicio instalado).
+La ejecución final usó MySQL `test_botica` migrado y RabbitMQ `rabbitmq:4` en Docker, publicado en
+`localhost:5672`.
 
 ### Frontend — `npx vitest run`
 ```text
@@ -114,35 +110,36 @@ Test Files  4 passed (4)
      Tests  13 passed (13)
 ```
 
+### Suite backend completa — `pytest tests/`
+
+La suite global quedó bloqueada por un problema preexistente de aislamiento: los tests de configuración
+de Sprint 0 dejan cacheado `MYSQL_HOST=192.168.1.100` mediante `get_settings()` y los tests posteriores
+de HU-01 intentan conectarse a ese host. Esto no ocurre ejecutando la suite HU-01 de forma aislada y no
+afecta el dictamen de los casos de HU-01, pero queda como deuda de integración de tests.
+
 ---
 
 ## 5. Arbitraje
 
 | Hallazgo | Lectura con la spec en la mano | Desenlace |
 |---|---|---|
-| 14 rojos de backend | La spec define el **comportamiento**, no el **entorno de test** (qué credenciales de MySQL ni que RabbitMQ esté levantado). El código del DEV (`service.py`, `router.py`, `main.py`) y las pruebas del TESTER (caja negra HTTP + bus) son lecturas correctas del contrato. | **No se corrige ningún agente.** El bloqueo es infraestructura. |
+| Timing del registro duplicado | La publicación síncrona bloqueaba ~4s con RabbitMQ caído; la spec exige mismo tiempo de respuesta. | **DEV corregido**, vuelta 1, `b975160`; `test_email_duplicado...` PASS. |
+| Durabilidad de `email.auth` | El ADR-0007 exige colas duraderas; el helper del TESTER declaraba `durable=False`. | **TESTER corregido**, vuelta 2, `7c1197b`; todos los casos RabbitMQ PASS. |
+| Aislamiento de loops | El loop por función dejaba pool/tareas entre tests; `session` elimina los 2 fallos de aislamiento. | **TESTER corregido**, `7c1197b`. |
 | 3 `NO VERIFICADO` (token/JWT expirado, suspendida) | No son provocables desde la interfaz observable sin manipular DB o clave JWT; el TESTER los marcó `skip` correctamente en vez de aflojarlos. | **No se corrige ningún agente.** Requiere decisión del humano. |
 
 ---
 
-## 6. Preguntas para el humano (gate)
+## 6. Decisiones del gate
 
-1. **Entorno de test del backend.** Para verificar los 14 casos restantes se necesita (a) crear en el
-   MySQL92 local el usuario `test_user`/`test_password` y la base `test_botica` con las migraciones
-   aplicadas, y (b) levantar RabbitMQ en `localhost:5672` (hoy no hay servicio instalado).
-   **¿Autorizo levantar ese entorno de test, o acepto los 14 como `NO VERIFICADO`?**
-2. **Casos no provocables (3).** Token de activación expirado (>24h), cuenta suspendida (403) y JWT
-   expirado (>1h) requieren manipular DB/clave o un fixture de seeding. **¿Los acepto como
-   `NO VERIFICADO`, o habilito un fixture de seed en el entorno de test?**
-3. **Credenciales de test desacopladas.** Las pruebas fijan `test_user`/`test_botica`; el entorno real
-   usa las de `.env`. **¿Mantengo un entorno de test dedicado (recomendado) o alineo las pruebas al
-   `.env` local?**
+1. El humano autorizó levantar el entorno dedicado de test: MySQL `test_user`/`test_botica` y RabbitMQ
+   en Docker.
+2. El humano aceptó los tres casos no provocables como `NO VERIFICADO`.
 
 ---
 
 ## 7. Conclusión
 
-La HU-01 está **implementada y probada en todo lo verificable sin infraestructura** (frontend completo
-+ 7 casos de validación/seguridad del backend, que cubren anti-enumeración, rate limit y protección de
-sesión). El código respeta los ADRs (0003, 0004, 0007, 0015, 0017, 0018, 0019) y la arquitectura por
-capas. Resta levantar el entorno de test para dar por verde los 14 casos transaccionales.
+La HU-01 está **aprobada**: backend 21/21 casos ejecutables y frontend 13/13 pruebas en verde. Los tres
+casos restantes quedan explícitamente `NO VERIFICADO` por no ser provocables desde la interfaz observable.
+El código respeta los ADRs 0003, 0004, 0007, 0015, 0017, 0018 y 0019, así como la arquitectura por capas.
