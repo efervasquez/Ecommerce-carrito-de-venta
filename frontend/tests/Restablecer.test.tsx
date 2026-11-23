@@ -83,11 +83,18 @@ describe('HU-02 /restablecer — contrato CONTRATO-HU-02.md v1', () => {
     vi.stubGlobal('fetch', fetchMock);
     const { container } = renderRestablecer('/restablecer?token=TOKEN-INVALIDO');
 
-    const requestLink = screen.queryByRole('link', { name: 'Solicitar nuevo enlace' });
-    const requestButton = screen.queryByRole('button', { name: 'Solicitar nuevo enlace' });
-    expect(requestLink ?? requestButton).not.toBeNull();
+    fireEvent.change(container.querySelector('input[name="password"]') as HTMLInputElement, {
+      target: { value: 'NuevaClave2026!' },
+    });
+    fireEvent.change(container.querySelector('input[name="confirm_password"]') as HTMLInputElement, {
+      target: { value: 'NuevaClave2026!' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Actualizar contraseña' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const requestLink = await screen.findByRole('link', { name: 'Solicitar nuevo enlace' });
+    expect(requestLink.getAttribute('href')).toBe('/recuperar');
     expect(container.querySelector('input[name="password"]')).toBeNull();
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect((requestLink ?? requestButton)?.getAttribute('href')).toBe('/recuperar');
+    expect(container.querySelector('input[name="confirm_password"]')).toBeNull();
   });
 });
