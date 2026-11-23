@@ -9,7 +9,7 @@
 
 ## 1. Dictamen
 
-🟡 **PARCIALMENTE VERIFICADO — pendiente de aceptación de 2 casos `NO VERIFICADO`.**
+🟢 **APROBADO con 2 casos `NO VERIFICADO` aceptados por el humano.**
 
 - Backend HU-02: **14 PASS, 2 NO VERIFICADO**.
 - Frontend HU-02: **6/6 PASS**.
@@ -74,10 +74,10 @@ Tests       19 passed (19)
 | Límite diario | `NO VERIFICADO`: cooldown de 15 minutos impide probar tres solicitudes diarias sin reloj/DB controlados. No se corrige ningún agente. |
 | Token expirado | `NO VERIFICADO`: requiere esperar una hora o manipular reloj/DB. No se corrige ningún agente. |
 
-## 6. Gate pendiente
+## 6. Gate resuelto
 
-¿Aceptas los dos casos `NO VERIFICADO` —límite diario y token expirado— para cerrar HU-02 como
-aprobada, igual que se aceptaron los casos no provocables de HU-01?
+El usuario aceptó los dos casos `NO VERIFICADO` —límite diario y token expirado— el 2026-11-23.
+HU-02 queda cerrada como aprobada localmente.
 
 ## 7. Archivos relevantes
 
