@@ -3,6 +3,7 @@
 Fuente unica: contratos/CONTRATO-HU-03.md v1, aprobada 2026-11-23.
 """
 
+import asyncio
 import uuid
 
 import pytest_asyncio
@@ -116,12 +117,14 @@ class TestCatalogoAPI:
         assert response.status_code == 422, response.text
 
     async def test_rate_limit_mas_de_20_consultas_por_ip_retorna_429(self, catalog_client):
-        responses = [
-            await catalog_client.get(
-                CATALOG_SEARCH,
-                params={"q": "consulta-sin-resultados", "limit": 1},
+        responses = await asyncio.gather(
+            *(
+                catalog_client.get(
+                    CATALOG_SEARCH,
+                    params={"q": "consulta-sin-resultados", "limit": 1},
+                )
+                for _ in range(21)
             )
-            for _ in range(21)
-        ]
+        )
         too_many = [response for response in responses if response.status_code == 429]
         assert too_many, [response.status_code for response in responses]

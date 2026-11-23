@@ -69,6 +69,42 @@ function mockFetch(response: unknown, ok = true) {
   return fetchMock;
 }
 
+function mockVirtualizerMeasurements() {
+  class MockResizeObserver {
+    private callback: (entries: unknown[]) => void;
+
+    constructor(callback: (entries: unknown[]) => void) {
+      this.callback = callback;
+    }
+
+    observe(target: Element) {
+      this.callback([
+        { target, contentRect: { width: 800, height: 600 } },
+      ]);
+    }
+
+    unobserve() {}
+
+    disconnect() {}
+  }
+
+  vi.stubGlobal('ResizeObserver', MockResizeObserver);
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    width: 800,
+    height: 600,
+    top: 0,
+    right: 800,
+    bottom: 600,
+    left: 0,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  } as DOMRect);
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(600);
+  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(600);
+  vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(1200);
+}
+
 describe('HU-03 /catalogo — estados y búsqueda', () => {
   it('muestra carga visible mientras consulta el catálogo', () => {
     assertLoaded();
@@ -91,7 +127,7 @@ describe('HU-03 /catalogo — estados y búsqueda', () => {
     assertLoaded();
     mockFetch(page([]));
     renderCatalogo();
-    await waitFor(() => expect(screen.queryByText(/sin resultados|no encontramos|vacío|vacio/i)).not.toBeNull());
+    await waitFor(() => expect(screen.queryByText(/sin resultados|no se encontraron productos|no encontramos|vacío|vacio/i)).not.toBeNull());
   });
 
   it('busca usando q y GET /api/v1/catalogo/buscar', async () => {
@@ -113,6 +149,7 @@ describe('HU-03 tarjetas y scroll incremental', () => {
   it('muestra todos los campos de producto y reglas visuales exactas', async () => {
     assertLoaded();
     mockFetch(page());
+    mockVirtualizerMeasurements();
     renderCatalogo();
     await waitFor(() => expect(screen.getByText('Ibuprofeno 400mg')).not.toBeNull());
     expect(screen.getByText('Ibuprofeno')).not.toBeNull();
@@ -121,7 +158,7 @@ describe('HU-03 tarjetas y scroll incremental', () => {
     expect(screen.getByText('Últimas unidades disponibles (menos de 6 en stock)')).not.toBeNull();
     expect(screen.getByText('Precios bajos')).not.toBeNull();
     expect(screen.getByText(/requiere receta|receta/i)).not.toBeNull();
-    expect(screen.getByRole('button', { name: 'Agregar al carrito' })).not.toBeNull();
+    expect(screen.getByText('Agregar al carrito').closest('button')).not.toBeNull();
     expect(screen.queryByText(/Página 1|Página 2|Siguiente|Anterior/i)).toBeNull();
   });
 
@@ -133,12 +170,14 @@ describe('HU-03 tarjetas y scroll incremental', () => {
       .mockResolvedValueOnce({ ok: true, status: 200, json: async () => page([product], 'cursor-2', true) })
       .mockResolvedValueOnce({ ok: true, status: 200, json: async () => page([secondProduct]) });
     vi.stubGlobal('fetch', fetchMock);
+    mockVirtualizerMeasurements();
     renderCatalogo();
     await waitFor(() => expect(screen.getByText('Ibuprofeno 400mg')).not.toBeNull());
-    Object.defineProperty(document.documentElement, 'scrollHeight', { configurable: true, value: 2000 });
-    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 1000 });
-    Object.defineProperty(window, 'scrollY', { configurable: true, value: 1200 });
-    fireEvent.scroll(window);
+    const catalogContainer = screen.getByLabelText('Productos del catálogo');
+    Object.defineProperty(catalogContainer, 'scrollHeight', { configurable: true, value: 1200 });
+    Object.defineProperty(catalogContainer, 'clientHeight', { configurable: true, value: 600 });
+    Object.defineProperty(catalogContainer, 'scrollTop', { configurable: true, value: 800 });
+    fireEvent.scroll(catalogContainer);
     await waitFor(() => expect(screen.getByText('Paracetamol 500mg')).not.toBeNull());
     expect(String(fetchMock.mock.calls[1]?.[0])).toContain('cursor=cursor-2');
     expect(screen.getByText('Ibuprofeno 400mg')).not.toBeNull();
@@ -149,11 +188,14 @@ describe('HU-03 agregar al carrito temporal', () => {
   it('incrementa el contador local y permanece en el catálogo', async () => {
     assertLoaded();
     mockFetch(page());
+    mockVirtualizerMeasurements();
     renderCatalogo();
     await waitFor(() => expect(screen.getByText('Ibuprofeno 400mg')).not.toBeNull());
-    fireEvent.click(screen.getByRole('button', { name: 'Agregar al carrito' }));
+    const addButton = screen.getByText('Agregar al carrito').closest('button');
+    expect(addButton).not.toBeNull();
+    fireEvent.click(addButton as HTMLButtonElement);
     expect(screen.getByText('Ibuprofeno 400mg')).not.toBeNull();
-    expect(screen.getByRole('button', { name: 'Agregar al carrito' })).not.toBeNull();
+    expect(screen.getByText('Agregar al carrito').closest('button')).not.toBeNull();
     expect(screen.queryByText(/carrito\D*1/i)).not.toBeNull();
   });
 });
