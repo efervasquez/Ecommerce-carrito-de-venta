@@ -5,7 +5,9 @@ import { HealthStatus } from './components/HealthStatus';
 import { Activar } from './pages/Activar';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
+import { Recuperar } from './pages/Recuperar';
 import { Registro } from './pages/Registro';
+import { Restablecer } from './pages/Restablecer';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +27,8 @@ export const App: React.FC = () => {
           <Route path="/registro" element={<Registro />} />
           <Route path="/activar" element={<Activar />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/recuperar" element={<Recuperar />} />
+          <Route path="/restablecer" element={<Restablecer />} />
           <Route path="/salud" element={<HealthStatus />} />
         </Routes>
       </BrowserRouter>

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Sequence
+from typing import Optional
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -67,6 +67,29 @@ class AuthRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_latest_recovery_token(
+        self, session: AsyncSession, usuario_id: int
+    ) -> Optional[Token]:
+        result = await session.execute(
+            select(Token)
+            .where(Token.usuario_id == usuario_id, Token.tipo == "recuperacion")
+            .order_by(Token.creado_en.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def count_recovery_tokens_since(
+        self, session: AsyncSession, usuario_id: int, since: datetime
+    ) -> int:
+        result = await session.execute(
+            select(Token.id).where(
+                Token.usuario_id == usuario_id,
+                Token.tipo == "recuperacion",
+                Token.creado_en >= since,
+            )
+        )
+        return len(result.scalars().all())
+
     async def invalidate_unused_activation_tokens(
         self, session: AsyncSession, usuario_id: int, exclude_token_id: Optional[int] = None
     ) -> None:
@@ -84,9 +107,32 @@ class AuthRepository:
             stmt = stmt.where(Token.id != exclude_token_id)
         await session.execute(stmt)
 
+    async def invalidate_unused_recovery_tokens(
+        self, session: AsyncSession, usuario_id: int, exclude_token_id: Optional[int] = None
+    ) -> None:
+        """Invalida tokens de recuperacion no usados antes de emitir uno nuevo."""
+        stmt = (
+            update(Token)
+            .where(
+                Token.usuario_id == usuario_id,
+                Token.tipo == "recuperacion",
+                Token.usado_en.is_(None),
+            )
+            .values(usado_en=utcnow())
+        )
+        if exclude_token_id is not None:
+            stmt = stmt.where(Token.id != exclude_token_id)
+        await session.execute(stmt)
+
     async def set_usuario_activo(
         self, session: AsyncSession, usuario: Usuario, password_hash: str
     ) -> None:
         usuario.estado = "activo"
+        usuario.password_hash = password_hash
+        await session.flush()
+
+    async def set_usuario_password(
+        self, session: AsyncSession, usuario: Usuario, password_hash: str
+    ) -> None:
         usuario.password_hash = password_hash
         await session.flush()

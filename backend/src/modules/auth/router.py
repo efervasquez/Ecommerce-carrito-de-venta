@@ -13,7 +13,9 @@ from src.modules.auth.schemas import (
     LoginResponse,
     MeResponse,
     MensajeResponse,
+    RecuperarRequest,
     RegistroRequest,
+    RestablecerRequest,
 )
 from src.modules.auth.security import decode_access_token
 from src.modules.auth.service import (
@@ -70,6 +72,26 @@ async def activar(
     service: AuthService = Depends(get_auth_service),
 ) -> MensajeResponse:
     message = await service.activar_cuenta(payload.token, payload.password, session)
+    return MensajeResponse(message=message)
+
+
+@router.post("/recuperar", response_model=MensajeResponse)
+async def recuperar(
+    payload: RecuperarRequest,
+    session: AsyncSession = Depends(get_db_session),
+    service: AuthService = Depends(get_auth_service),
+) -> MensajeResponse:
+    message = await service.solicitar_recuperacion(payload.email, session)
+    return MensajeResponse(message=message)
+
+
+@router.post("/restablecer", response_model=MensajeResponse)
+async def restablecer(
+    payload: RestablecerRequest,
+    session: AsyncSession = Depends(get_db_session),
+    service: AuthService = Depends(get_auth_service),
+) -> MensajeResponse:
+    message = await service.restablecer_contrasena(payload.token, payload.password, session)
     return MensajeResponse(message=message)
 
 

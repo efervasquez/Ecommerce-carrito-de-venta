@@ -27,6 +27,23 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RecuperarRequest(BaseModel):
+    """Peticion de recuperacion con el email de la cuenta."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    email: str
+
+
+class RestablecerRequest(BaseModel):
+    """Peticion de restablecimiento con token opaco y nueva contrasena."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    token: str
+    password: str
+
+
 class MensajeResponse(BaseModel):
     """Respuesta generica con un unico mensaje visible."""
 

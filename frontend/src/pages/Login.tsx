@@ -68,6 +68,10 @@ export const Login: React.FC = () => {
           Iniciar sesión
         </button>
 
+        <Link to="/recuperar" style={{ ...styles.link, display: 'block', marginTop: '1rem', textAlign: 'center' }}>
+          ¿Olvidaste tu contraseña?
+        </Link>
+
         <p style={styles.enlace}>
           ¿No tienes cuenta?{' '}
           <Link to="/registro" style={styles.link}>

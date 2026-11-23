@@ -75,3 +75,20 @@ export function login(email: string, password: string): Promise<LoginResponse> {
     body: JSON.stringify({ email, password }),
   });
 }
+
+export function solicitarRecuperacion(email: string): Promise<MensajeResponse> {
+  return request<MensajeResponse>('/auth/recuperar', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function restablecerContrasena(
+  token: string,
+  password: string,
+): Promise<MensajeResponse> {
+  return request<MensajeResponse>('/auth/restablecer', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+}

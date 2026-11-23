@@ -12,6 +12,8 @@ AUTH_POST_PATHS = {
     "/api/v1/auth/registro",
     "/api/v1/auth/activar",
     "/api/v1/auth/login",
+    "/api/v1/auth/recuperar",
+    "/api/v1/auth/restablecer",
 }
 
 
