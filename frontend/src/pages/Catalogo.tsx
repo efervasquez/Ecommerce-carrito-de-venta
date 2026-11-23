@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { Link } from 'react-router-dom';
 import { buscarCatalogo, ProductoCatalogo } from '../services/catalog';
 
 const PAGE_SIZE = 8;
@@ -106,7 +107,11 @@ export const Catalogo: React.FC = () => {
                     style={styles.image}
                   />
                   <div style={styles.cardBody}>
-                    <h2 style={styles.productName}>{product.nombre}</h2>
+                    <h2 style={styles.productName}>
+                      <Link to={`/catalogo/productos/${product.id}`} style={styles.productLink}>
+                        {product.nombre}
+                      </Link>
+                    </h2>
                     <p style={styles.components}>{product.componentes}</p>
                     <p style={styles.price}>{product.moneda} {product.precio_regular.toFixed(2)}</p>
                     {product.descuento_porcentaje > 0 && (

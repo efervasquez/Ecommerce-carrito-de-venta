@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HealthStatus } from './components/HealthStatus';
 import { Activar } from './pages/Activar';
 import { Catalogo } from './pages/Catalogo';
+import { DetalleProducto } from './pages/DetalleProducto';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Recuperar } from './pages/Recuperar';
@@ -26,6 +27,7 @@ export const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/catalogo/productos/:id" element={<DetalleProducto />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/activar" element={<Activar />} />
           <Route path="/login" element={<Login />} />

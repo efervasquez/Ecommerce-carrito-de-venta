@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import unicodedata
+from urllib.parse import quote
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -27,9 +28,32 @@ PRODUCT_FIELDS = [
     "requiere_receta",
 ]
 
+DETAIL_FIELDS = [
+    "id",
+    "nombre",
+    "imagen_url",
+    "componentes",
+    "precio_regular",
+    "moneda",
+    "descuento_porcentaje",
+    "requiere_receta",
+    "detalle",
+    "presentacion",
+    "metodos_entrega",
+    "contraindicaciones",
+    "precauciones_advertencias",
+    "reacciones_adversas",
+    "precios_bajos",
+    "stock_disponible",
+]
+
 
 class CatalogUnavailableError(RuntimeError):
     """El modelo de lectura externo no esta disponible y no hay fallback."""
+
+
+class ProductNotFoundError(LookupError):
+    """El producto no existe en el modelo de lectura."""
 
 
 class CatalogReadRepository:
@@ -47,6 +71,41 @@ class CatalogReadRepository:
                 raise CatalogUnavailableError from exc
             logger.warning("Meilisearch no disponible; usando seed local de catalogo: %s", exc)
             return self._search_seed(query, offset, limit)
+
+    async def get_by_id(self, producto_id: int) -> Dict[str, Any]:
+        try:
+            return await self._get_meilisearch_product(producto_id)
+        except ProductNotFoundError:
+            raise
+        except (httpx.HTTPError, OSError, ValueError) as exc:
+            settings = get_settings()
+            if not settings.catalog_seed_fallback:
+                raise CatalogUnavailableError from exc
+            logger.warning("Meilisearch no disponible; usando seed local de detalle: %s", exc)
+            for product in self._load_seed():
+                if int(product.get("id")) == producto_id:
+                    return self._normalize_detail(product)
+            raise ProductNotFoundError from exc
+
+    async def _get_meilisearch_product(self, producto_id: int) -> Dict[str, Any]:
+        settings = get_settings()
+        headers = {"Authorization": f"Bearer {settings.meilisearch_api_key}"}
+        if not settings.meilisearch_api_key:
+            headers = {}
+        url = (
+            f"{settings.meilisearch_url.rstrip('/')}/indexes/"
+            f"{settings.meilisearch_index}/documents/{quote(str(producto_id))}"
+        )
+        async with httpx.AsyncClient(timeout=1.5) as client:
+            response = await client.get(
+                url,
+                params={"fields": ",".join(DETAIL_FIELDS)},
+                headers=headers,
+            )
+            if response.status_code == 404:
+                raise ProductNotFoundError
+            response.raise_for_status()
+            return self._normalize_detail(response.json())
 
     async def _search_meilisearch(
         self, query: str, offset: int, limit: int
@@ -122,6 +181,25 @@ class CatalogReadRepository:
         product["precios_bajos"] = bool(product.get("precios_bajos", False))
         product["requiere_receta"] = bool(product.get("requiere_receta", False))
         return {field: product.get(field) for field in PRODUCT_FIELDS}
+
+    @staticmethod
+    def _normalize_detail(product: Dict[str, Any]) -> Dict[str, Any]:
+        normalized = CatalogReadRepository._normalize_product(product)
+        normalized.update(
+            {
+                "detalle": product.get("detalle", ""),
+                "presentacion": product.get("presentacion", ""),
+                "metodos_entrega": product.get(
+                    "metodos_entrega", ["Delivery", "Retiro en botica"]
+                ),
+                "contraindicaciones": product.get("contraindicaciones", ""),
+                "precauciones_advertencias": product.get(
+                    "precauciones_advertencias", ""
+                ),
+                "reacciones_adversas": product.get("reacciones_adversas", ""),
+            }
+        )
+        return {field: normalized.get(field) for field in DETAIL_FIELDS}
 
     @staticmethod
     def _normalize(value: str) -> str:

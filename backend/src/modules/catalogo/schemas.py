@@ -27,6 +27,27 @@ class CatalogoResponse(BaseModel):
     has_next: bool = False
 
 
+class ProductoDetalle(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    id: int
+    nombre: str
+    imagen_url: Optional[str] = None
+    componentes: str
+    precio_regular: float
+    moneda: str = "PEN"
+    descuento_porcentaje: float = 0
+    requiere_receta: bool
+    detalle: str
+    presentacion: str
+    metodos_entrega: list[str]
+    contraindicaciones: str
+    precauciones_advertencias: str
+    reacciones_adversas: str
+    precios_bajos: bool
+    stock_disponible: int
+
+
 class CatalogoQuery(BaseModel):
     """Parametros normalizados para la consulta de lectura."""
 

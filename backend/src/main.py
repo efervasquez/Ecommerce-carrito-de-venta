@@ -71,11 +71,11 @@ def create_app() -> FastAPI:
         location = "body"
         for err in exc.errors():
             loc = err.get("loc", ())
-            if loc and loc[0] in {"body", "query"} and len(loc) > 1:
+            if loc and loc[0] in {"body", "query", "path"} and len(loc) > 1:
                 location = str(loc[0])
                 field = str(loc[1])
                 break
-        if location == "query":
+        if location in {"query", "path"}:
             return JSONResponse(
                 status_code=422, content={"detail": f"El parámetro {field} es inválido."}
             )

@@ -18,6 +18,15 @@ export interface CatalogoResponse {
   has_next: boolean;
 }
 
+export interface ProductoDetalle extends ProductoCatalogo {
+  detalle: string;
+  presentacion: string;
+  metodos_entrega: string[];
+  contraindicaciones: string;
+  precauciones_advertencias: string;
+  reacciones_adversas: string;
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 export async function buscarCatalogo(
@@ -33,4 +42,13 @@ export async function buscarCatalogo(
     throw new Error('detail' in body && body.detail ? body.detail : 'No se pudo cargar el catálogo.');
   }
   return body as CatalogoResponse;
+}
+
+export async function obtenerProductoDetalle(productoId: string): Promise<ProductoDetalle> {
+  const response = await fetch(`${API_BASE_URL}/catalogo/productos/${encodeURIComponent(productoId)}`);
+  const body = (await response.json()) as ProductoDetalle | { detail?: string };
+  if (!response.ok) {
+    throw new Error('detail' in body && body.detail ? body.detail : 'No se pudo cargar el producto.');
+  }
+  return body as ProductoDetalle;
 }

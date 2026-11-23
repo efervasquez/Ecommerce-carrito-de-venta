@@ -2,8 +2,12 @@ from typing import Optional
 
 from fastapi import HTTPException
 
-from src.modules.catalogo.repository import CatalogReadRepository, CatalogUnavailableError
-from src.modules.catalogo.schemas import CatalogoResponse, ProductoCatalogo
+from src.modules.catalogo.repository import (
+    CatalogReadRepository,
+    CatalogUnavailableError,
+    ProductNotFoundError,
+)
+from src.modules.catalogo.schemas import CatalogoResponse, ProductoCatalogo, ProductoDetalle
 
 
 class CatalogService:
@@ -26,3 +30,14 @@ class CatalogService:
             next_cursor=next_cursor,
             has_next=has_next,
         )
+
+    async def get_detail(self, producto_id: int) -> ProductoDetalle:
+        try:
+            product = await self.repository.get_by_id(producto_id)
+        except ProductNotFoundError as exc:
+            raise HTTPException(status_code=404, detail="Producto no encontrado.") from exc
+        except CatalogUnavailableError as exc:
+            raise HTTPException(
+                status_code=503, detail="El catálogo no está disponible."
+            ) from exc
+        return ProductoDetalle(**product)

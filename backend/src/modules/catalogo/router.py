@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from src.modules.catalogo.schemas import CatalogoResponse
+from src.modules.catalogo.schemas import CatalogoResponse, ProductoDetalle
 from src.modules.catalogo.service import CatalogService
 
 router = APIRouter(prefix="/catalogo", tags=["Catalogo"])
@@ -20,3 +20,11 @@ async def buscar_catalogo(
     service: CatalogService = Depends(get_catalog_service),
 ) -> CatalogoResponse:
     return await service.search(q, cursor, limit)
+
+
+@router.get("/productos/{producto_id}", response_model=ProductoDetalle)
+async def detalle_producto(
+    producto_id: int,
+    service: CatalogService = Depends(get_catalog_service),
+) -> ProductoDetalle:
+    return await service.get_detail(producto_id)
