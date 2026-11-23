@@ -10,8 +10,9 @@ from src.config import get_settings
 from src.core.broker import close_broker_connection
 from src.core.database import _engine
 from src.core.logging import CorrelationIdMiddleware, setup_logging
-from src.core.rate_limit import AuthRateLimitMiddleware
+from src.core.rate_limit import AuthRateLimitMiddleware, CatalogRateLimitMiddleware
 from src.modules.auth import auth_router
+from src.modules.catalogo import catalogo_router
 from src.modules.health import health_router
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ def create_app() -> FastAPI:
 
     # Rate limiting perimetral de 3 req/min por IP sobre POST de auth (ADR-0019)
     app.add_middleware(AuthRateLimitMiddleware)
+    app.add_middleware(CatalogRateLimitMiddleware)
 
     # Configuracion restrictiva de CORS (ADR-0019)
     app.add_middleware(
@@ -66,11 +68,17 @@ def create_app() -> FastAPI:
         request: Request, exc: RequestValidationError
     ) -> JSONResponse:
         field = "requerido"
+        location = "body"
         for err in exc.errors():
             loc = err.get("loc", ())
-            if loc and loc[0] == "body" and len(loc) > 1:
+            if loc and loc[0] in {"body", "query"} and len(loc) > 1:
+                location = str(loc[0])
                 field = str(loc[1])
                 break
+        if location == "query":
+            return JSONResponse(
+                status_code=422, content={"detail": f"El parámetro {field} es inválido."}
+            )
         return JSONResponse(
             status_code=422, content={"detail": f"El campo {field} es requerido."}
         )
@@ -78,6 +86,7 @@ def create_app() -> FastAPI:
     # Registro de routers por version de API
     app.include_router(health_router, prefix="/api/v1")
     app.include_router(auth_router, prefix="/api/v1")
+    app.include_router(catalogo_router, prefix="/api/v1")
 
     return app
 

@@ -16,6 +16,8 @@ AUTH_POST_PATHS = {
     "/api/v1/auth/restablecer",
 }
 
+CATALOG_GET_PATH = "/api/v1/catalogo/buscar"
+
 
 class RateLimiter:
     """Limitador de peticiones por clave (IP) con ventana fija en memoria.
@@ -51,6 +53,7 @@ class RateLimiter:
 
 # Limite perimetral de 3 peticiones por minuto por IP en endpoints de auth (ADR-0019).
 auth_rate_limiter = RateLimiter(max_requests=3, window_seconds=60)
+catalog_rate_limiter = RateLimiter(max_requests=20, window_seconds=1)
 
 
 def _client_ip(request: Request) -> str:
@@ -71,4 +74,23 @@ class AuthRateLimitMiddleware(BaseHTTPMiddleware):
         if request.method == "POST" and request.url.path in AUTH_POST_PATHS:
             if not self.limiter.allow(_client_ip(request)):
                 return JSONResponse(status_code=429, content={"detail": RATE_LIMIT_DETAIL})
+        return await call_next(request)
+
+
+class CatalogRateLimitMiddleware(BaseHTTPMiddleware):
+    """Limita busquedas de catalogo a 20 consultas por segundo e IP (ADR-0019)."""
+
+    def __init__(self, app, *, limiter: RateLimiter = None) -> None:
+        super().__init__(app)
+        self.limiter = limiter if limiter is not None else catalog_rate_limiter
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        if request.method == "GET" and request.url.path == CATALOG_GET_PATH:
+            if not self.limiter.allow(_client_ip(request)):
+                return JSONResponse(
+                    status_code=429,
+                    content={
+                        "detail": "Demasiadas consultas de catálogo. Intente nuevamente."
+                    },
+                )
         return await call_next(request)

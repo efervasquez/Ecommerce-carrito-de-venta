@@ -37,6 +37,14 @@ class Settings(BaseSettings):
         default="https://localhost:5173", alias="FRONTEND_BASE_URL"
     )
 
+    # Catalogo de lectura CQRS / Meilisearch (ADR-0005, ADR-0006)
+    meilisearch_url: str = Field(
+        default="http://127.0.0.1:7700", alias="MEILISEARCH_URL"
+    )
+    meilisearch_api_key: str = Field(default="", alias="MEILISEARCH_API_KEY")
+    meilisearch_index: str = Field(default="productos", alias="MEILISEARCH_INDEX")
+    catalog_seed_fallback: bool = Field(default=True, alias="CATALOG_SEED_FALLBACK")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

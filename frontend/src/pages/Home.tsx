@@ -27,6 +27,8 @@ export const Home: React.FC = () => {
           </Link>
         </div>
       )}
+
+      <a href="/catalogo" style={styles.catalogLink}>Explorar catálogo</a>
     </main>
   );
 };
@@ -72,6 +74,11 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 4,
     textDecoration: 'none',
     fontWeight: 500,
+  },
+  catalogLink: {
+    marginTop: '1rem',
+    color: '#2563eb',
+    fontWeight: 600,
   },
 };
 
