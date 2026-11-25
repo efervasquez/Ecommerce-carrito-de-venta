@@ -105,7 +105,7 @@ export const DetalleProducto: React.FC = () => {
             </button>
             {cartMessage && <p aria-live="polite" style={styles.localCart}>{cartMessage}</p>}
             {cartQuery.data && (
-              <Link to="/carrito" style={styles.link}>Ver carrito ({cartQuery.data.items_oferta.concat(cartQuery.data.items_regulares).reduce((total, item) => total + item.cantidad, 0)})</Link>
+              <Link to="/carrito" style={styles.link}>Ver carrito ({(cartQuery.data?.items_oferta ?? []).concat(cartQuery.data?.items_regulares ?? []).reduce((total, item) => total + item.cantidad, 0)})</Link>
             )}
           </form>
         </section>
