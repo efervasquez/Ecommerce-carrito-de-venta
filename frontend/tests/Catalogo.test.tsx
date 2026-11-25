@@ -69,6 +69,69 @@ function mockFetch(response: unknown, ok = true) {
   return fetchMock;
 }
 
+const emptyCartResponse = () => ({
+  items_oferta: [],
+  items_regulares: [],
+  subtotal: 0,
+  ahorro_total: 0,
+  total: 0,
+  reserva_expira_en: null,
+});
+
+const cartItemResponse = (producto_id = 1, cantidad = 1) => ({
+  producto_id,
+  nombre: 'Ibuprofeno 400mg',
+  imagen_url: null,
+  cantidad,
+  precio_regular: 12,
+  descuento_porcentaje: 0,
+  precio_final: 12,
+  subtotal: 12 * cantidad,
+  ahorro: 0,
+  stock_disponible: 4,
+});
+
+const cartWith = (items: ReturnType<typeof cartItemResponse>[]) => ({
+  items_oferta: items.filter((item) => item.descuento_porcentaje > 0),
+  items_regulares: items.filter((item) => item.descuento_porcentaje <= 0),
+  subtotal: 0,
+  ahorro_total: 0,
+  total: 0,
+  reserva_expira_en: null,
+});
+
+function mockRoutedFetch(options: {
+  cart?: unknown;
+  addedCart?: unknown;
+  catalogPages?: unknown[];
+} = {}) {
+  const {
+    cart = emptyCartResponse(),
+    addedCart = cartWith([cartItemResponse()]),
+    catalogPages = [page()],
+  } = options;
+  let catalogIndex = 0;
+  const ok = (body: unknown) =>
+    Promise.resolve({ ok: true, status: 200, json: async () => body });
+  const fetchMock = vi.fn((input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes('/api/v1/carrito/items')) return ok(addedCart);
+    if (url.includes('/api/v1/carrito')) return ok(cart);
+    if (url.includes('/api/v1/catalogo')) {
+      const body = catalogPages[Math.min(catalogIndex, catalogPages.length - 1)];
+      catalogIndex += 1;
+      return ok(body);
+    }
+    return Promise.resolve({
+      ok: false,
+      status: 404,
+      json: async () => ({ detail: 'not found' }),
+    });
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
 function mockVirtualizerMeasurements() {
   class MockResizeObserver {
     private callback: (entries: unknown[]) => void;
@@ -165,11 +228,9 @@ describe('HU-03 tarjetas y scroll incremental', () => {
   it('solicita la siguiente tanda con next_cursor y conserva la primera', async () => {
     assertLoaded();
     const secondProduct = { ...product, id: 2, nombre: 'Paracetamol 500mg' };
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => page([product], 'cursor-2', true) })
-      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => page([secondProduct]) });
-    vi.stubGlobal('fetch', fetchMock);
+    const fetchMock = mockRoutedFetch({
+      catalogPages: [page([product], 'cursor-2', true), page([secondProduct])],
+    });
     mockVirtualizerMeasurements();
     renderCatalogo();
     await waitFor(() => expect(screen.getByText('Ibuprofeno 400mg')).not.toBeNull());
@@ -179,23 +240,31 @@ describe('HU-03 tarjetas y scroll incremental', () => {
     Object.defineProperty(catalogContainer, 'scrollTop', { configurable: true, value: 800 });
     fireEvent.scroll(catalogContainer);
     await waitFor(() => expect(screen.getByText('Paracetamol 500mg')).not.toBeNull());
-    expect(String(fetchMock.mock.calls[1]?.[0])).toContain('cursor=cursor-2');
+    const catalogCalls = fetchMock.mock.calls.filter(([url]) =>
+      String(url).includes('/api/v1/catalogo'),
+    );
+    expect(catalogCalls.length).toBeGreaterThanOrEqual(2);
+    expect(String(catalogCalls[1]?.[0])).toContain('cursor=cursor-2');
     expect(screen.getByText('Ibuprofeno 400mg')).not.toBeNull();
   });
 });
 
-describe('HU-03 agregar al carrito temporal', () => {
-  it('incrementa el contador local y permanece en el catálogo', async () => {
+describe('HU-03 agregar al carrito persistente', () => {
+  it('muestra el contador Carrito: N del carrito persistente y permanece en el catálogo', async () => {
     assertLoaded();
-    mockFetch(page());
+    const fetchMock = mockRoutedFetch();
     mockVirtualizerMeasurements();
     renderCatalogo();
     await waitFor(() => expect(screen.getByText('Ibuprofeno 400mg')).not.toBeNull());
+    expect(screen.getByText(/Carrito:\s*0/)).not.toBeNull();
     const addButton = screen.getByText('Agregar al carrito').closest('button');
     expect(addButton).not.toBeNull();
     fireEvent.click(addButton as HTMLButtonElement);
+    await waitFor(() => expect(screen.getByText(/Carrito:\s*1/)).not.toBeNull());
     expect(screen.getByText('Ibuprofeno 400mg')).not.toBeNull();
     expect(screen.getByText('Agregar al carrito').closest('button')).not.toBeNull();
-    expect(screen.queryByText(/carrito\D*1/i)).not.toBeNull();
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).includes('/api/v1/carrito/items')),
+    ).toBe(true);
   });
 });

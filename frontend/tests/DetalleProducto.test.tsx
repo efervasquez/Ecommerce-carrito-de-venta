@@ -63,6 +63,64 @@ function mockDetailFetch(product = detailProduct) {
   return fetchMock;
 }
 
+const emptyCartResponse = () => ({
+  items_oferta: [],
+  items_regulares: [],
+  subtotal: 0,
+  ahorro_total: 0,
+  total: 0,
+  reserva_expira_en: null,
+});
+
+const cartItemResponse = (producto_id = 1, cantidad = 1) => ({
+  producto_id,
+  nombre: 'Azitromicina 500mg',
+  imagen_url: null,
+  cantidad,
+  precio_regular: 18.5,
+  descuento_porcentaje: 10,
+  precio_final: 16.65,
+  subtotal: 18.5 * cantidad,
+  ahorro: 1.85 * cantidad,
+  stock_disponible: 10,
+});
+
+const cartWith = (items: ReturnType<typeof cartItemResponse>[]) => ({
+  items_oferta: items.filter((item) => item.descuento_porcentaje > 0),
+  items_regulares: items.filter((item) => item.descuento_porcentaje <= 0),
+  subtotal: 0,
+  ahorro_total: 0,
+  total: 0,
+  reserva_expira_en: null,
+});
+
+function mockDetailRoutedFetch(options: {
+  product?: unknown;
+  cart?: unknown;
+  addedCart?: unknown;
+} = {}) {
+  const {
+    product = detailProduct,
+    cart = emptyCartResponse(),
+    addedCart = cartWith([cartItemResponse(1, 2)]),
+  } = options;
+  const ok = (body: unknown) =>
+    Promise.resolve({ ok: true, status: 200, json: async () => body });
+  const fetchMock = vi.fn((input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes('/api/v1/carrito/items')) return ok(addedCart);
+    if (url.includes('/api/v1/carrito')) return ok(cart);
+    if (url.includes('/api/v1/catalogo/productos')) return ok(product);
+    return Promise.resolve({
+      ok: false,
+      status: 404,
+      json: async () => ({ detail: 'not found' }),
+    });
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
 function assertLoaded() {
   expect(importError, `Pantalla HU-04 no implementada: ${importError}`).toBeNull();
   expect(DetalleProducto).not.toBeNull();
@@ -71,11 +129,14 @@ function assertLoaded() {
 describe('HU-04 /catalogo/productos/{id} — detalle comercial y clínico', () => {
   it('consulta el detalle por id y muestra todos los bloques obligatorios', async () => {
     assertLoaded();
-    const fetchMock = mockDetailFetch();
+    const fetchMock = mockDetailRoutedFetch();
     renderDetail();
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Azitromicina 500mg' })).not.toBeNull());
 
-    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/api/v1/catalogo/productos/1');
+    const detailCall = fetchMock.mock.calls.find(([url]) =>
+      String(url).includes('/api/v1/catalogo/productos/1'),
+    );
+    expect(detailCall).toBeDefined();
     expect(screen.getByText('Azitromicina dihidrato 500mg')).not.toBeNull();
     expect(screen.getByText(/18\.50|18,50/)).not.toBeNull();
     expect(screen.getByText(/10%/)).not.toBeNull();
@@ -94,7 +155,7 @@ describe('HU-04 /catalogo/productos/{id} — detalle comercial y clínico', () =
 
   it('muestra producto de venta libre cuando no requiere receta', async () => {
     assertLoaded();
-    mockDetailFetch({ ...detailProduct, requiere_receta: false });
+    mockDetailRoutedFetch({ product: { ...detailProduct, requiere_receta: false } });
     renderDetail();
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Azitromicina 500mg' })).not.toBeNull());
     expect(screen.getByText('Producto de venta libre')).not.toBeNull();
@@ -104,39 +165,49 @@ describe('HU-04 /catalogo/productos/{id} — detalle comercial y clínico', () =
 describe('HU-04 navegación y acción temporal', () => {
   it('mantiene la ruta de detalle y muestra cantidad y botón de compra', async () => {
     assertLoaded();
-    mockDetailFetch();
+    mockDetailRoutedFetch();
     renderDetail('/catalogo/productos/1');
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Azitromicina 500mg' })).not.toBeNull());
     expect(screen.getByRole('spinbutton')).not.toBeNull();
     expect(screen.getByText('Agregar al carrito').closest('button')).not.toBeNull();
   });
 
-  it('cantidad válida conserva la ficha y actualiza el contador local/temporal', async () => {
+  it('cantidad válida conserva la ficha, confirma el agregado y actualiza Ver carrito (N)', async () => {
     assertLoaded();
-    mockDetailFetch();
+    const fetchMock = mockDetailRoutedFetch();
     renderDetail();
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Azitromicina 500mg' })).not.toBeNull());
     const quantity = screen.getByRole('spinbutton') as HTMLInputElement;
     fireEvent.change(quantity, { target: { value: '2' } });
     fireEvent.click(screen.getByText('Agregar al carrito').closest('button') as HTMLButtonElement);
+    await waitFor(() => expect(screen.getByText('Producto agregado al carrito.')).not.toBeNull());
     expect(screen.getByRole('heading', { name: 'Azitromicina 500mg' })).not.toBeNull();
-    expect(screen.queryByText(/carrito\D*2/i) ?? screen.queryByText(/carrito\D*1/i)).not.toBeNull();
+    expect(screen.getByText(/Ver carrito \(\s*2\s*\)/)).not.toBeNull();
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).includes('/api/v1/carrito/items')),
+    ).toBe(true);
   });
 
-  it('cantidad mayor al stock muestra error y no ejecuta una segunda petición', async () => {
+  it('cantidad mayor al stock muestra error y no ejecuta la petición de agregado', async () => {
     assertLoaded();
-    const fetchMock = mockDetailFetch({ ...detailProduct, stock_disponible: 3 });
+    const fetchMock = mockDetailRoutedFetch({
+      product: { ...detailProduct, stock_disponible: 3 },
+    });
     renderDetail();
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Azitromicina 500mg' })).not.toBeNull());
     fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '4' } });
     fireEvent.click(screen.getByText('Agregar al carrito').closest('button') as HTMLButtonElement);
     expect(screen.queryByRole('alert') ?? screen.queryByText(/stock|disponible|cantidad|máximo|maximo/i)).not.toBeNull();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // GET /carrito + GET /catalogo/productos/{id}; no se dispara el POST de agregado.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).includes('/api/v1/carrito/items')),
+    ).toBe(false);
   });
 
   it('producto sin stock deshabilita Agregar al carrito', async () => {
     assertLoaded();
-    mockDetailFetch({ ...detailProduct, stock_disponible: 0 });
+    mockDetailRoutedFetch({ product: { ...detailProduct, stock_disponible: 0 } });
     renderDetail();
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Azitromicina 500mg' })).not.toBeNull());
     const addButton = screen.getByText('Agregar al carrito').closest('button') as HTMLButtonElement;

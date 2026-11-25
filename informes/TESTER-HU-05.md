@@ -4,7 +4,7 @@
 **Documento base:** `contratos/CONTRATO-HU-05.md` (v1, aprobada 2026-11-23)
 **Rama:** `feat/hu-05-carrito-reservas`
 **Autor:** Agente TESTER
-**Ronda:** 2 — ajustes de arbitraje LEAD (vuelta 1)
+**Ronda:** 3 — ajustes de arbitraje LEAD (vuelta 2: HU-03 y HU-04 migran al contador persistente)
 
 ## 1. Cobertura
 
@@ -64,13 +64,23 @@ cd backend
 Requisito de entorno: la BD `test_botica` debe estar migrada a `0002`
 (`sesiones`, `carritos`, `carrito_items`, `inventario_stock`).
 
-### Frontend
+### Frontend (caja negra HU-05)
 
 ```text
 cd frontend
 npm test -- --run tests/Carrito.test.tsx
 Test Files  1 passed (1)
 Tests       5 passed (5)
+```
+
+### Frontend (suite completa — vuelta 2)
+
+```text
+cd frontend
+npx vitest run
+EXIT=0
+Test Files  10 passed (10)
+Tests       37 passed (37)
 ```
 
 ## 5. Ajustes de la vuelta 1 (arbitraje LEAD)
@@ -98,21 +108,43 @@ propósito para no crear el engine async global en otro event loop (causaba
 textos de vacío `No hay productos en oferta.` / `No hay productos regulares.`
 y error `No se pudo actualizar el carrito.`.
 
-## 6. Nota de estado del árbol de trabajo (importante para el LEAD)
+## 6. Ajustes de la vuelta 2 (arbitraje LEAD — HU-03 y HU-04)
 
-La corrida verde de backend se ejecutó contra el árbol de trabajo actual, que
-contiene **cambios del DEV aún sin commitear** en rutas fuera de propiedad del
-TESTER:
+El `CONTRATO-HU-05` establece que HU-05 **reemplaza** el contador temporal de
+HU-03/HU-04 por persistencia real (`GET /api/v1/carrito`). No es regresión de
+producto, es evolución de spec: se actualizan aserciones, no el comportamiento.
 
-- `backend/src/modules/carrito/service.py` (reintentos/ serialización por actor y
-  corrección de `subtotal`/`total`: `subtotal = regular * cantidad`,
-  `total = subtotal - ahorro_total`).
-- `backend/src/modules/carrito/inventory.py` (creación segura de filas de stock).
+**`tests/Catalogo.test.tsx` (2 fallos → PASS):**
+- Helper `mockRoutedFetch` enruta por URL: `/api/v1/carrito` (GET) y
+  `/api/v1/carrito/items` (POST) devuelven un `CartResponse` válido;
+  `/api/v1/catalogo` devuelve las páginas en secuencia. Así el `useQuery` del
+  carrito ya no desplaza los `mockResolvedValueOnce` de la paginación.
+- `solicita la siguiente tanda...` filtra las llamadas al catálogo y verifica
+  `cursor=cursor-2` y la conservación de la primera página.
+- `muestra el contador Carrito: N...` verifica el `Link` nuevo `Carrito: 0` →
+  `Carrito: 1` tras agregar, alimentado por el carrito persistente.
 
-La prueba `test_carrito_oferta_primero_calcula_ahorro_y_total` (assert
-`total == subtotal - ahorro_total`) depende de la corrección de totales del DEV.
-El TESTER **no** commitea esos archivos; corresponden al DEV. Si el LEAD juzga
-contra `HEAD` (2c2e269) sin esos cambios, esa prueba y el stock pueden fallar.
+**`tests/DetalleProducto.test.tsx` (6 fallos → PASS):**
+- `mockDetailRoutedFetch` enruta por URL: `/api/v1/carrito` devuelve un
+  `CartResponse` válido (evita `items_oferta === undefined` → `TypeError ... concat`);
+  `/api/v1/catalogo/productos/{id}` devuelve el producto; el POST devuelve el
+  carrito actualizado.
+- Se conservan íntegros los bloques clínicos, navegación, validación de stock y
+  botón deshabilitado sin stock.
+- La aserción del detalle busca la llamada por URL (no por índice, porque el
+  índice 0 es ahora la consulta del carrito).
+- `Agregado al carrito temporal` → `Producto agregado al carrito.` +
+  `Ver carrito (2)` (contador persistente tras agregar 2 unidades).
+- Call-count de la validación de stock: también cuenta la consulta del carrito
+  (2 GET) y verifica explícitamente que no se emite el POST de agregado.
+
+**Suite completa:** `npx vitest run` → `Test Files 10 passed (10)`,
+`Tests 37 passed (37)`, `EXIT=0`.
+
+**Resolución de la nota de la vuelta 1:** los cambios del DEV ya fueron
+commiteados en `a2204af` (totales, checkout repetido, deadlock) y `bb7393a`
+(guardia del contador en DetalleProducto). Las corridas verdes actuales se
+ejecutan contra esos commits, no contra cambios sin commitear.
 
 ## 7. Alcance respetado
 
@@ -126,4 +158,6 @@ contra `HEAD` (2c2e269) sin esos cambios, esa prueba y el stock pueden fallar.
 
 - `backend/tests/test_hu05_cart_reservations.py`
 - `frontend/tests/Carrito.test.tsx`
+- `frontend/tests/Catalogo.test.tsx`
+- `frontend/tests/DetalleProducto.test.tsx`
 - `informes/TESTER-HU-05.md`
