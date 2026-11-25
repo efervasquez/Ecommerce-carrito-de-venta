@@ -1,10 +1,14 @@
-import uuid
+import asyncio
+import functools
+import random
+import threading
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import delete, func, select
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import get_settings
@@ -25,6 +29,75 @@ GUEST_PRODUCTS_MESSAGE = "Límite máximo de 10 productos distintos"
 STOCK_MESSAGE = "Stock máximo disponible alcanzado ({units} unidades)"
 CHECKOUT_MESSAGE = "Reserva creada exitosamente."
 
+# Codigos MySQL de errores transitorios reintentables (deadlock y lock wait timeout).
+_RETRYABLE_DB_CODES = {1205, 1213}
+_DEADLOCK_ATTEMPTS = 3
+
+
+def _is_retryable_db_error(exc: OperationalError) -> bool:
+    orig = getattr(exc, "orig", None)
+    args = getattr(orig, "args", ()) if orig is not None else ()
+    if args and isinstance(args[0], int) and args[0] in _RETRYABLE_DB_CODES:
+        return True
+    return getattr(orig, "sqlstate", None) == "40001"
+
+
+def retry_on_deadlock(method):
+    """Reintenta la operacion completa ante deadlocks transitorios de MySQL (1213).
+
+    Cada intento corre sobre una transaccion limpia: ante el deadlock se hace
+    rollback y se vuelve a ejecutar la operacion leyendo el estado actual, lo que
+    garantiza atomicidad sin exponer un 500 al cliente.
+    """
+
+    @functools.wraps(method)
+    async def wrapper(self, session, *args, **kwargs):
+        for attempt in range(_DEADLOCK_ATTEMPTS):
+            try:
+                return await method(self, session, *args, **kwargs)
+            except OperationalError as exc:
+                if attempt == _DEADLOCK_ATTEMPTS - 1 or not _is_retryable_db_error(exc):
+                    raise
+                await session.rollback()
+                await asyncio.sleep(random.uniform(0.01, 0.03) * (attempt + 1))
+        raise RuntimeError("unreachable")
+
+    return wrapper
+
+
+# Candados por IP/sesion para serializar la creacion y bloqueo de sesion/carrito.
+# Se indexan por loop para no reutilizar locks entre distintos event loops (p. ej. tests).
+_actor_locks: dict[tuple[int, str], asyncio.Lock] = {}
+_actor_locks_guard = threading.Lock()
+
+
+def _get_actor_lock(key: str) -> asyncio.Lock:
+    loop_id = id(asyncio.get_running_loop())
+    indexed = (loop_id, key)
+    with _actor_locks_guard:
+        lock = _actor_locks.get(indexed)
+        if lock is None:
+            lock = asyncio.Lock()
+            _actor_locks[indexed] = lock
+        return lock
+
+
+def serialize_by_actor(method):
+    """Serializa operaciones del mismo actor (IP guest o sesion autenticada).
+
+    Evita que inserciones concurrentes de sesiones con la misma IP colisionen en
+    el indice secundario y provoquen deadlocks (MySQL 1213) bajo peticiones
+    simultaneas. El reintento sigue cubriendo deadlocks entre procesos.
+    """
+
+    @functools.wraps(method)
+    async def wrapper(self, session, actor: "CartActor", *args, **kwargs):
+        key = actor.ip_address if actor.is_guest else actor.session_id
+        async with _get_actor_lock(key):
+            return await method(self, session, actor, *args, **kwargs)
+
+    return wrapper
+
 
 @dataclass(frozen=True)
 class CartActor:
@@ -43,12 +116,16 @@ class CartService:
         self.inventory = inventory or LocalMySQLInventoryProvider()
         self.catalog = catalog or CatalogReadRepository()
 
+    @serialize_by_actor
+    @retry_on_deadlock
     async def get_cart(self, session: AsyncSession, actor: CartActor) -> CarritoResponse:
         cart = await self._get_or_create_cart(session, actor)
         await self._purge_if_expired(session, cart)
         await session.commit()
         return await self._to_response(session, cart)
 
+    @serialize_by_actor
+    @retry_on_deadlock
     async def add_item(
         self, session: AsyncSession, actor: CartActor, payload: CarritoItemInput
     ) -> CarritoResponse:
@@ -67,6 +144,8 @@ class CartService:
         await session.commit()
         return await self._to_response(session, cart)
 
+    @serialize_by_actor
+    @retry_on_deadlock
     async def update_item(
         self,
         session: AsyncSession,
@@ -85,6 +164,8 @@ class CartService:
         await session.commit()
         return await self._to_response(session, cart)
 
+    @serialize_by_actor
+    @retry_on_deadlock
     async def delete_item(
         self, session: AsyncSession, actor: CartActor, product_id: int
     ) -> CarritoResponse:
@@ -104,6 +185,8 @@ class CartService:
         await session.commit()
         return await self._to_response(session, cart)
 
+    @serialize_by_actor
+    @retry_on_deadlock
     async def checkout_guest(
         self, session: AsyncSession, actor: CartActor
     ) -> CheckoutResponse:
@@ -117,6 +200,11 @@ class CartService:
                 raise HTTPException(status_code=409, detail="La sesión autenticada no tiene reserva.")
             return CheckoutResponse(
                 message=CHECKOUT_MESSAGE, reserva_expira_en=cart.reserva_expira_en
+            )
+        if cart.reserva_expira_en is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Ya existe una reserva activa para esta sesión.",
             )
         await self._ensure_guest_checkout_limit(session, actor, cart.id)
         operations = []
@@ -142,6 +230,7 @@ class CartService:
                 detail=STOCK_MESSAGE.format(units=exc.available),
             ) from exc
 
+    @retry_on_deadlock
     async def release_expired(self, session: AsyncSession) -> int:
         now = utcnow()
         result = await session.execute(
@@ -324,7 +413,7 @@ class CartService:
                     precio_regular=regular,
                     descuento_porcentaje=discount,
                     precio_final=final,
-                    subtotal=round(final * item.cantidad, 2),
+                    subtotal=round(regular * item.cantidad, 2),
                     ahorro=round((regular - final) * item.cantidad, 2),
                     stock_disponible=available + item.cantidad_reservada,
                 )
@@ -339,6 +428,6 @@ class CartService:
             items_regulares=regulars,
             subtotal=subtotal,
             ahorro_total=savings,
-            total=round(subtotal, 2),
+            total=round(subtotal - savings, 2),
             reserva_expira_en=cart.reserva_expira_en,
         )

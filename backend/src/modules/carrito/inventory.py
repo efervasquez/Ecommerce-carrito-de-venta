@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Iterable
+from typing import Iterable, Optional
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.auth.models import utcnow
@@ -25,27 +26,58 @@ class LocalMySQLInventoryProvider:
         initial_stock: int,
         *,
         for_update: bool = False,
-    ) -> InventarioStock:
+        create: bool = True,
+    ) -> Optional[InventarioStock]:
         statement = select(InventarioStock).where(InventarioStock.producto_id == product_id)
         if for_update:
             statement = statement.with_for_update()
         result = await session.execute(statement)
         row = result.scalar_one_or_none()
-        if row is None:
-            row = InventarioStock(
-                producto_id=product_id,
-                disponible=max(0, initial_stock),
-                reservado=0,
-                actualizado_en=utcnow(),
-            )
-            session.add(row)
-            await session.flush()
+        if row is None and create:
+            row = await self._create_row(session, product_id, initial_stock, for_update=for_update)
         return row
+
+    async def _create_row(
+        self,
+        session: AsyncSession,
+        product_id: int,
+        initial_stock: int,
+        *,
+        for_update: bool,
+    ) -> InventarioStock:
+        """Crea la fila de stock de forma segura ante inserciones concurrentes.
+
+        Bajo peticiones simultaneas dos transacciones pueden intentar crear la
+        misma fila. Se usa un savepoint para que la colision por clave unica no
+        invalide la transaccion externa y luego se relee la fila ya persistida.
+        """
+        try:
+            async with session.begin_nested():
+                row = InventarioStock(
+                    producto_id=product_id,
+                    disponible=max(0, initial_stock),
+                    reservado=0,
+                    actualizado_en=utcnow(),
+                )
+                session.add(row)
+                await session.flush()
+            return row
+        except IntegrityError:
+            statement = select(InventarioStock).where(
+                InventarioStock.producto_id == product_id
+            )
+            if for_update:
+                statement = statement.with_for_update()
+            result = await session.execute(statement)
+            return result.scalar_one()
 
     async def get_available_stock(
         self, session: AsyncSession, product_id: int, initial_stock: int
     ) -> int:
-        row = await self._get_row(session, product_id, initial_stock)
+        # Solo lectura: nunca crea filas para no provocar bloqueos bajo concurrencia.
+        row = await self._get_row(session, product_id, initial_stock, create=False)
+        if row is None:
+            return max(0, initial_stock)
         return row.disponible
 
     async def reserve_stock_batch(

@@ -80,3 +80,29 @@ Resultado: TypeScript y Vite compilan correctamente.
 
 No se tocaron `backend/tests/**`, `frontend/tests/**`, archivos de paquete de la raíz ni se agregó
 `frontend/dist` al commit.
+
+## 4. Vuelta 1 — correcciones del arbitraje LEAD
+
+| # | Defecto | Corrección |
+|---|---|---|
+| 1 | `subtotal` se calculaba sobre el precio ya descontado y `total == subtotal`. | En `CartService._to_response`, `subtotal` ahora suma `precio_regular * cantidad` por ítem; `total = subtotal - ahorro_total` (precio final). |
+| 2 | Segundo `POST /api/v1/checkout` de un guest con reserva activa devolvía 200 y renovaba el TTL. | `checkout_guest` detecta reserva vigente en el propio carrito guest (tras purgar expiradas) y responde HTTP 409 sin renovar el TTL. |
+| 3 | `add_item` concurrente provocaba deadlock MySQL 1213 por `INSERT` simultáneo en `sesiones.ip_address`. | Se eliminó la escritura implícita de `inventario_stock` en lecturas (`get_available_stock` ya no crea filas), se hizo la creación de fila tolerante a colisiones con savepoint (`IntegrityError`), se agregó reintento con jitter ante `OperationalError` 1213/1205, y se serializan las operaciones por IP (guest) o sesión (autenticado) para evitar el deadlock de origen. |
+
+### Verificación vuelta 1
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m pytest tests/test_hu05_cart_reservations.py -q
+```
+
+Resultado: **14 passed, 3 skipped** (los 3 skips son los casos TTL marcados como no verificables por el TESTER).
+
+- `test_carrito_oferta_primero_calcula_ahorro_y_total` → pasa.
+- `test_checkout_guest_repetido_con_reserva_activa_retorna_409` → pasa.
+- `test_rate_limit_agregar_por_ip_retorna_429` → pasa.
+- Regresión HU-03 + HU-04 en aislamiento: **11 passed**.
+
+Nota operativa: la base `test_botica` tenía reservas acumuladas de corridas previas
+(`producto_id=1 disponible=0 reservado=10`) que hacían fallar adds con 409 por stock. Se limpiaron
+`carrito_items`, `carritos`, `sesiones` e `inventario_stock` para correr la suite desde estado limpio.
