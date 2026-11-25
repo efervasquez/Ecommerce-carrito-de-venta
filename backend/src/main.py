@@ -10,9 +10,14 @@ from src.config import get_settings
 from src.core.broker import close_broker_connection
 from src.core.database import _engine
 from src.core.logging import CorrelationIdMiddleware, setup_logging
-from src.core.rate_limit import AuthRateLimitMiddleware, CatalogRateLimitMiddleware
+from src.core.rate_limit import (
+    AuthRateLimitMiddleware,
+    CartRateLimitMiddleware,
+    CatalogRateLimitMiddleware,
+)
 from src.modules.auth import auth_router
 from src.modules.catalogo import catalogo_router
+from src.modules.carrito import carrito_router
 from src.modules.health import health_router
 
 logger = logging.getLogger(__name__)
@@ -51,6 +56,7 @@ def create_app() -> FastAPI:
     # Rate limiting perimetral de 3 req/min por IP sobre POST de auth (ADR-0019)
     app.add_middleware(AuthRateLimitMiddleware)
     app.add_middleware(CatalogRateLimitMiddleware)
+    app.add_middleware(CartRateLimitMiddleware)
 
     # Configuracion restrictiva de CORS (ADR-0019)
     app.add_middleware(
@@ -87,6 +93,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router, prefix="/api/v1")
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(catalogo_router, prefix="/api/v1")
+    app.include_router(carrito_router, prefix="/api/v1")
 
     return app
 

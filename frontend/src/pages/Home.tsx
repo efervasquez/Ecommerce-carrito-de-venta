@@ -29,6 +29,7 @@ export const Home: React.FC = () => {
       )}
 
       <a href="/catalogo" style={styles.catalogLink}>Explorar catálogo</a>
+      <a href="/carrito" style={styles.catalogLink}>Ver carrito</a>
     </main>
   );
 };

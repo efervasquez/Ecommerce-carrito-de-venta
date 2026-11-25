@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { obtenerProductoDetalle } from '../services/catalog';
+import { addCartItem, CartResponse, getCart } from '../services/cart';
 
 export const DetalleProducto: React.FC = () => {
   const { id = '' } = useParams<{ id: string }>();
   const [cantidad, setCantidad] = useState('1');
   const [errorCantidad, setErrorCantidad] = useState<string | null>(null);
-  const [agregado, setAgregado] = useState(0);
+  const [cartMessage, setCartMessage] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const cartQuery = useQuery({ queryKey: ['carrito'], queryFn: getCart });
+  const addMutation = useMutation({
+    mutationFn: (quantity: number) => addCartItem(Number(id), quantity),
+    onSuccess: (data: CartResponse) => {
+      queryClient.setQueryData(['carrito'], data);
+      setCartMessage('Producto agregado al carrito.');
+    },
+    onError: (error: Error) => setCartMessage(error.message),
+  });
   const detailQuery = useQuery({
     queryKey: ['catalogo-producto', id],
     queryFn: () => obtenerProductoDetalle(id),
@@ -38,7 +49,7 @@ export const DetalleProducto: React.FC = () => {
       return;
     }
     setErrorCantidad(null);
-    setAgregado((current) => current + parsed);
+    addMutation.mutate(parsed);
   };
 
   return (
@@ -87,12 +98,15 @@ export const DetalleProducto: React.FC = () => {
             {errorCantidad && <p role="alert" style={styles.error}>{errorCantidad}</p>}
             <button
               type="submit"
-              disabled={product.stock_disponible < 1}
+              disabled={product.stock_disponible < 1 || addMutation.isPending}
               style={styles.button}
             >
               Agregar al carrito
             </button>
-            <p aria-live="polite" style={styles.localCart}>Agregado al carrito temporal: {agregado}</p>
+            {cartMessage && <p aria-live="polite" style={styles.localCart}>{cartMessage}</p>}
+            {cartQuery.data && (
+              <Link to="/carrito" style={styles.link}>Ver carrito ({cartQuery.data.items_oferta.concat(cartQuery.data.items_regulares).reduce((total, item) => total + item.cantidad, 0)})</Link>
+            )}
           </form>
         </section>
       </article>

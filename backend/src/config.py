@@ -45,6 +45,22 @@ class Settings(BaseSettings):
     meilisearch_index: str = Field(default="productos", alias="MEILISEARCH_INDEX")
     catalog_seed_fallback: bool = Field(default=True, alias="CATALOG_SEED_FALLBACK")
 
+    # Carrito y reservas (ADR-0011, ADR-0016)
+    cart_reservation_ttl_seconds: int = Field(
+        default=86400, alias="CART_RESERVATION_TTL_SECONDS"
+    )
+    guest_max_units_per_sku: int = Field(default=3, alias="GUEST_MAX_UNITS_PER_SKU")
+    guest_max_distinct_products: int = Field(
+        default=10, alias="GUEST_MAX_DISTINCT_PRODUCTS"
+    )
+    guest_max_reserved_units_per_ip: int = Field(
+        default=15, alias="GUEST_MAX_RESERVED_UNITS_PER_IP"
+    )
+    cart_add_burst: int = Field(default=5, alias="CART_ADD_BURST")
+    checkout_rate_limit_per_minute: int = Field(
+        default=3, alias="CHECKOUT_RATE_LIMIT_PER_MINUTE"
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

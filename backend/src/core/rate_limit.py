@@ -6,6 +6,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
+from src.config import get_settings
+
 RATE_LIMIT_DETAIL = "Demasiadas solicitudes. Por favor, intente nuevamente en unos minutos."
 
 AUTH_POST_PATHS = {
@@ -17,6 +19,8 @@ AUTH_POST_PATHS = {
 }
 
 CATALOG_GET_PATH = "/api/v1/catalogo/buscar"
+CART_ADD_PATH = "/api/v1/carrito/items"
+CHECKOUT_PATH = "/api/v1/checkout"
 
 
 class RateLimiter:
@@ -54,6 +58,8 @@ class RateLimiter:
 # Limite perimetral de 3 peticiones por minuto por IP en endpoints de auth (ADR-0019).
 auth_rate_limiter = RateLimiter(max_requests=3, window_seconds=60)
 catalog_rate_limiter = RateLimiter(max_requests=20, window_seconds=1)
+cart_add_rate_limiter = RateLimiter(max_requests=5, window_seconds=1)
+checkout_rate_limiter = RateLimiter(max_requests=3, window_seconds=60)
 
 
 def _client_ip(request: Request) -> str:
@@ -92,5 +98,36 @@ class CatalogRateLimitMiddleware(BaseHTTPMiddleware):
                     content={
                         "detail": "Demasiadas consultas de catálogo. Intente nuevamente."
                     },
+                )
+        return await call_next(request)
+
+
+class CartRateLimitMiddleware(BaseHTTPMiddleware):
+    """Protege adición de guest y checkout contra abuso de reservas (ADR-0016)."""
+
+    def __init__(self, app, *, add_limiter: RateLimiter = None, checkout_limiter: RateLimiter = None) -> None:
+        super().__init__(app)
+        settings = get_settings()
+        self.add_limiter = add_limiter if add_limiter is not None else RateLimiter(
+            settings.cart_add_burst, 1
+        )
+        self.checkout_limiter = (
+            checkout_limiter
+            if checkout_limiter is not None
+            else RateLimiter(settings.checkout_rate_limit_per_minute, 60)
+        )
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        if request.method == "POST" and request.url.path == CART_ADD_PATH:
+            if not self.add_limiter.allow(_client_ip(request)):
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Demasiadas solicitudes. Por favor, intente nuevamente."},
+                )
+        if request.method == "POST" and request.url.path == CHECKOUT_PATH:
+            if not self.checkout_limiter.allow(_client_ip(request)):
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Demasiados inicios de checkout. Intente nuevamente."},
                 )
         return await call_next(request)

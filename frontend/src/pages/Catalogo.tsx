@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Link } from 'react-router-dom';
+import { addCartItem, CartResponse, getCart } from '../services/cart';
 import { buscarCatalogo, ProductoCatalogo } from '../services/catalog';
 
 const PAGE_SIZE = 8;
@@ -9,8 +10,19 @@ const PAGE_SIZE = 8;
 export const Catalogo: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
-  const [cart, setCart] = useState<Record<number, number>>({});
+  const [cartMessage, setCartMessage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+  const cartQuery = useQuery({ queryKey: ['carrito'], queryFn: getCart });
+  const addMutation = useMutation({
+    mutationFn: ({ productId, quantity }: { productId: number; quantity: number }) =>
+      addCartItem(productId, quantity),
+    onSuccess: (data: CartResponse) => {
+      queryClient.setQueryData(['carrito'], data);
+      setCartMessage('Producto agregado al carrito.');
+    },
+    onError: (error: Error) => setCartMessage(error.message),
+  });
 
   const catalogQuery = useInfiniteQuery({
     queryKey: ['catalogo', query],
@@ -45,11 +57,12 @@ export const Catalogo: React.FC = () => {
     }
   }, [catalogQuery, products.length, virtualizer]);
 
-  const cartCount = Object.values(cart).reduce((total, value) => total + value, 0);
+  const cartCount = [...(cartQuery.data?.items_oferta ?? []), ...(cartQuery.data?.items_regulares ?? [])]
+    .reduce((total, item) => total + item.cantidad, 0);
 
   const addToCart = (product: ProductoCatalogo) => {
     if (product.stock_disponible < 1) return;
-    setCart((current) => ({ ...current, [product.id]: (current[product.id] ?? 0) + 1 }));
+    addMutation.mutate({ productId: product.id, quantity: 1 });
   };
 
   const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
@@ -64,7 +77,7 @@ export const Catalogo: React.FC = () => {
           <p style={styles.eyebrow}>Botica la Luz</p>
           <h1 style={styles.title}>Catálogo</h1>
         </div>
-        <div aria-live="polite" style={styles.cartCounter}>Carrito temporal: {cartCount}</div>
+        <Link to="/carrito" aria-live="polite" style={styles.cartCounter}>Carrito: {cartCount}</Link>
       </header>
 
       <form onSubmit={submitSearch} style={styles.searchForm} role="search">
@@ -79,6 +92,7 @@ export const Catalogo: React.FC = () => {
         />
         <button type="submit" style={styles.searchButton}>Buscar</button>
       </form>
+      {cartMessage && <p role="status" style={styles.status}>{cartMessage}</p>}
 
       {catalogQuery.isLoading && <p role="status" style={styles.status}>Cargando catálogo...</p>}
       {catalogQuery.isError && <p role="alert" style={styles.error}>Error al cargar el catálogo: {catalogQuery.error.message}</p>}
@@ -124,7 +138,7 @@ export const Catalogo: React.FC = () => {
                     {product.requiere_receta && <span style={styles.recipe}>Requiere receta</span>}
                     <button
                       type="button"
-                      disabled={product.stock_disponible < 1}
+                      disabled={product.stock_disponible < 1 || addMutation.isPending}
                       onClick={() => addToCart(product)}
                       aria-label={`Agregar ${product.nombre} al carrito`}
                       style={styles.addButton}
