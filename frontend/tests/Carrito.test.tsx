@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -105,7 +105,8 @@ describe('HU-05 /carrito — ofertas, cantidades y totales', () => {
       expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/api/v1/carrito/items/1'))).toBe(true);
     });
 
-    const remove = screen.getByRole('button', { name: /eliminar.*Ibuprofeno|eliminar/i });
+    const ibuprofeno = screen.getByText('Ibuprofeno 400mg').closest('article') as HTMLElement;
+    const remove = within(ibuprofeno).getByRole('button', { name: /eliminar/i });
     fireEvent.click(remove);
     await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/api/v1/carrito/items/1'))).toBe(true));
     expect(screen.getByText('Productos en Oferta')).not.toBeNull();
@@ -115,7 +116,7 @@ describe('HU-05 /carrito — ofertas, cantidades y totales', () => {
     assertLoaded();
     mockCartFetch();
     renderCarrito();
-    await waitFor(() => expect(screen.getByText(/reserva|expira/i)).not.toBeNull());
+    await waitFor(() => expect(screen.getByText(/Reserva expira en/i)).not.toBeNull());
   });
 });
 
@@ -131,13 +132,14 @@ describe('HU-05 carrito vacío y errores', () => {
       reserva_expira_en: null,
     });
     renderCarrito();
-    await waitFor(() => expect(screen.queryByText(/carrito vacío|carrito vacio|sin productos|vacío|vacio/i)).not.toBeNull());
+    await waitFor(() => expect(screen.getByText('No hay productos en oferta.')).not.toBeNull());
+    expect(screen.getByText('No hay productos regulares.')).not.toBeNull();
   });
 
   it('muestra error visible si falla la lectura del carrito', async () => {
     assertLoaded();
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) }));
     renderCarrito();
-    await waitFor(() => expect(screen.queryByText(/error|intenta|falló|fallo/i)).not.toBeNull());
+    await waitFor(() => expect(screen.getByText('No se pudo actualizar el carrito.')).not.toBeNull());
   });
 });

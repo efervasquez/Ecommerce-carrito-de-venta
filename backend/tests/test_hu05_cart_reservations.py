@@ -32,6 +32,35 @@ async def cart_client(app):
         yield client
 
 
+@pytest.fixture(autouse=True)
+def reset_shared_inventory(default_env):
+    """Deja el inventario compartido en estado inicial antes de cada prueba.
+
+    Las pruebas reservan stock de forma persistente en la base de pruebas compartida,
+    asi que borrar las filas de inventario lo devuelve al estado del catalogo: el
+    servicio reconstruye cada fila de forma lazy (disponible = stock del seed,
+    reservado = 0) en el primer uso. Se usa pymysql sincrono a proposito para no crear
+    el engine async global en un event loop distinto al de las pruebas.
+    """
+    import pymysql
+
+    connection = pymysql.connect(
+        host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
+        port=int(os.environ.get("MYSQL_PORT", "3306")),
+        user=os.environ.get("MYSQL_USER", "test_user"),
+        password=os.environ.get("MYSQL_PASSWORD", "test_password"),
+        database=os.environ.get("MYSQL_DB", "test_botica"),
+        autocommit=True,
+    )
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM inventario_stock")
+    finally:
+        connection.close()
+
+    yield
+
+
 async def _rabbit_queue():
     import aio_pika
 
@@ -92,6 +121,14 @@ async def get_offer_and_regular(client) -> tuple[dict, dict]:
     assert offer is not None, "El seed debe exponer un producto en oferta"
     assert regular is not None, "El seed debe exponer un producto regular"
     return offer, regular
+
+
+async def get_low_stock_product(client) -> dict:
+    """Producto con stock <= 4 para poder dejarlo en disponibilidad 1 reservando <= 3."""
+    products = await get_catalog_products(client)
+    candidates = [item for item in products if 1 <= item["stock_disponible"] <= 4]
+    assert candidates, "El seed debe exponer un producto con stock entre 1 y 4"
+    return min(candidates, key=lambda item: item["stock_disponible"])
 
 
 async def add_item(client, product_id: int, quantity: int = 1, headers: dict | None = None):
@@ -185,13 +222,28 @@ class TestCartReadAndItems:
         assert response.status_code == 200, response.text
 
     async def test_patch_superior_stock_retorna_409_y_mensaje_maximo(self, cart_client):
-        product = await get_product_with_stock(cart_client)
-        assert (await add_item(cart_client, product["id"], 1)).status_code == 200
-        response = await cart_client.patch(
-            f"{CART_ITEMS}/{product['id']}", json={"cantidad": product["stock_disponible"] + 1}
-        )
-        assert response.status_code == 409
-        assert "Stock máximo disponible alcanzado" in response.json()["detail"]
+        # El limite de 3 unidades/SKU se evalua antes que el stock, asi que se deja un
+        # producto con disponibilidad 1 (reservando stock-1 con un autenticado) para que
+        # un PATCH guest a 2 supere el stock sin activar el limite.
+        product = await get_low_stock_product(cart_client)
+        stock = product["stock_disponible"]
+        reserve = max(0, stock - 1)
+        headers = await create_authenticated_headers(cart_client) if reserve else {}
+        try:
+            if reserve:
+                reserved = await add_item(cart_client, product["id"], reserve, headers)
+                assert reserved.status_code == 200, reserved.text
+            assert (await add_item(cart_client, product["id"], 1)).status_code == 200
+            response = await cart_client.patch(
+                f"{CART_ITEMS}/{product['id']}", json={"cantidad": 2}
+            )
+            assert response.status_code == 409, response.text
+            detail = response.json()["detail"]
+            assert "Stock máximo disponible alcanzado" in detail
+            assert "1 unidades" in detail
+        finally:
+            if reserve:
+                await cart_client.delete(f"{CART_ITEMS}/{product['id']}", headers=headers)
 
     async def test_delete_item_retorna_200_y_elimina(self, cart_client):
         product = await get_product_with_stock(cart_client)
