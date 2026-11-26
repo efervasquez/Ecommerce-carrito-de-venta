@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import Optional, Union
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -16,6 +16,7 @@ from src.modules.carrito.schemas import (
     CheckoutResponse,
 )
 from src.modules.carrito.service import CartActor, CartService
+from src.modules.pagos.schemas import CheckoutInput, CheckoutPagoResponse
 
 router = APIRouter(tags=["Carrito"])
 _bearer = HTTPBearer(auto_error=False)
@@ -113,10 +114,16 @@ async def delete_cart_item(
     return await service.delete_item(session, actor, producto_id)
 
 
-@router.post("/checkout", response_model=CheckoutResponse)
+@router.post("/checkout", response_model=Union[CheckoutPagoResponse, CheckoutResponse])
 async def checkout(
+    payload: Optional[CheckoutInput] = None,
     actor: CartActor = Depends(get_cart_actor),
     session: AsyncSession = Depends(get_db_session),
     service: CartService = Depends(get_cart_service),
-) -> CheckoutResponse:
-    return await service.checkout_guest(session, actor)
+):
+    # El caso guest sigue siendo el checkout HU-05 (solo reserva); el caso
+    # autenticado se delega al modulo de pagos (ADR-0013).
+    from src.modules.pagos.service import PagoService
+
+    pago_service = PagoService(cart_service=service)
+    return await pago_service.iniciar_checkout(session, actor, payload)

@@ -106,6 +106,7 @@ export const Carrito: React.FC = () => {
         >
           Reservar y continuar
         </button>
+        <Link to="/checkout" style={styles.link}>Continuar al pago</Link>
       </aside>
     </main>
   );

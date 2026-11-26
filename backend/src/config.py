@@ -61,6 +61,18 @@ class Settings(BaseSettings):
         default=3, alias="CHECKOUT_RATE_LIMIT_PER_MINUTE"
     )
 
+    # Pasarela de pagos Stripe Sandbox (ADR-0013). Sin secretos reales en el codigo.
+    stripe_secret_key: str = Field(default="", alias="STRIPE_SECRET_KEY")
+    stripe_publishable_key: str = Field(default="", alias="STRIPE_PUBLISHABLE_KEY")
+    stripe_webhook_secret: str = Field(default="", alias="STRIPE_WEBHOOK_SECRET")
+    stripe_api_url: str = Field(
+        default="https://api.stripe.com/v1", alias="STRIPE_API_URL"
+    )
+    checkout_prorroga_seconds: int = Field(
+        default=600, alias="CHECKOUT_PRORROGA_SECONDS"
+    )
+    pedido_secuencia_base: int = Field(default=10000, alias="PEDIDO_SECUENCIA_BASE")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

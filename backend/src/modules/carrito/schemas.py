@@ -38,3 +38,4 @@ class CarritoResponse(BaseModel):
 class CheckoutResponse(BaseModel):
     message: str
     reserva_expira_en: datetime
+    requiere_autenticacion: bool = False

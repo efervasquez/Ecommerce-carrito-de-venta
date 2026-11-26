@@ -78,7 +78,11 @@ class AuthRateLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         if request.method == "POST" and request.url.path in AUTH_POST_PATHS:
-            if not self.limiter.allow(_client_ip(request)):
+            # 3 req/min por IP y endpoint de auth (ADR-0019). La clave incluye la
+            # ruta para que el flujo registro->activar->login no agote el cupo
+            # de un mismo endpoint cuando se encadenan varios usuarios.
+            key = f"{_client_ip(request)}:{request.url.path}"
+            if not self.limiter.allow(key):
                 return JSONResponse(status_code=429, content={"detail": RATE_LIMIT_DETAIL})
         return await call_next(request)
 

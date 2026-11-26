@@ -75,10 +75,12 @@ class LocalMySQLInventoryProvider:
         self, session: AsyncSession, product_id: int, initial_stock: int
     ) -> int:
         # Solo lectura: nunca crea filas para no provocar bloqueos bajo concurrencia.
+        # `disponible` es stock fisico y `reservado` son unidades apartadas; lo
+        # efectivamente libre para nuevas reserved es la diferencia.
         row = await self._get_row(session, product_id, initial_stock, create=False)
         if row is None:
             return max(0, initial_stock)
-        return row.disponible
+        return max(0, row.disponible - row.reservado)
 
     async def reserve_stock_batch(
         self,
@@ -94,15 +96,46 @@ class LocalMySQLInventoryProvider:
             )
         for product_id, quantity, _ in operations:
             row = rows[product_id]
-            if row.disponible < quantity:
-                raise StockInsufficientError(product_id, row.disponible)
+            if row.disponible - row.reservado < quantity:
+                raise StockInsufficientError(product_id, row.disponible - row.reservado)
         now = utcnow()
         for product_id, quantity, _ in operations:
             row = rows[product_id]
-            row.disponible -= quantity
             row.reservado += quantity
             row.actualizado_en = now
         await session.flush()
+
+    async def confirm_deduction_batch(
+        self,
+        session: AsyncSession,
+        items: Iterable[tuple[int, int]],
+    ) -> bool:
+        """Convierte reservas en descuento definitivo dentro de la transicion activa.
+
+        Se usa en la fase 2 del checkout (ADR-0013). Devuelve `False` ante una
+        inconsistencia fisica (fila ausente o reservado insuficiente) sin mutar
+        stock, para que el pedido se registre como `incidencia_stock`.
+        """
+        operations = sorted(items, key=lambda item: item[0])
+        rows: dict[int, InventarioStock] = {}
+        for product_id, quantity in operations:
+            result = await session.execute(
+                select(InventarioStock)
+                .where(InventarioStock.producto_id == product_id)
+                .with_for_update()
+            )
+            row = result.scalar_one_or_none()
+            if row is None or row.reservado < quantity:
+                return False
+            rows[product_id] = row
+        now = utcnow()
+        for product_id, quantity in operations:
+            row = rows[product_id]
+            row.disponible -= quantity
+            row.reservado -= quantity
+            row.actualizado_en = now
+        await session.flush()
+        return True
 
     async def release_reservation_batch(
         self,
@@ -121,6 +154,5 @@ class LocalMySQLInventoryProvider:
                 continue
             released = min(quantity, row.reservado)
             row.reservado -= released
-            row.disponible += released
             row.actualizado_en = utcnow()
         await session.flush()

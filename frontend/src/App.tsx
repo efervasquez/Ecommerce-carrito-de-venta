@@ -5,6 +5,8 @@ import { HealthStatus } from './components/HealthStatus';
 import { Activar } from './pages/Activar';
 import { Catalogo } from './pages/Catalogo';
 import { Carrito } from './pages/Carrito';
+import { Checkout } from './pages/Checkout';
+import { Confirmacion } from './pages/Confirmacion';
 import { DetalleProducto } from './pages/DetalleProducto';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
@@ -29,6 +31,8 @@ export const App: React.FC = () => {
           <Route path="/" element={<Home />} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/carrito" element={<Carrito />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/pedidos/:numero" element={<Confirmacion />} />
           <Route path="/catalogo/productos/:id" element={<DetalleProducto />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/activar" element={<Activar />} />
