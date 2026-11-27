@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "75be95ff-4b21-48eb-be2a-d95809a8d77e",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Temp2\\Ecommerce-carrito-de-venta\\.archify\\architecture-botica-la-luz-20261015-004507\\candidate.json",
+  "output": "C:\\Temp2\\Ecommerce-carrito-de-venta\\.archify\\architecture-botica-la-luz-20261015-004507\\botica-la-luz.html",
+  "specification": {
+    "sha256": "5887a742f4ed0824454dc71bf15fee08ee77840b46d2e218e949edc636d14abd",
+    "bytes": 3911
+  },
+  "artifact": {
+    "sha256": "f553b73324ad36e55d01597c0eeb6960c8c7193be6880abbd6a3ca6851f18e9e",
+    "bytes": 832074
+  }
+}
