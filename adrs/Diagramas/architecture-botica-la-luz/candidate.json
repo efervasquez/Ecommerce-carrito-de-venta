@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Plataforma E-commerce — Botica la Luz",
+    "locale": "es",
+    "output": ".archify/architecture-botica-la-luz-20261015-004507/botica-la-luz.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "cliente", "type": "external", "label": "Cliente", "sublabel": "Navegador web", "pos": [40, 150], "size": [120, 64] },
+    { "id": "operadores", "type": "external", "label": "Operadores", "sublabel": "Admin · Farmacéutico · Motorizado", "pos": [40, 320], "size": [140, 72] },
+    { "id": "spa", "type": "frontend", "label": "React SPA", "sublabel": "React 18 + Vite", "tag": "servida por IIS", "pos": [230, 180], "size": [140, 68] },
+    { "id": "api", "type": "backend", "label": "FastAPI", "sublabel": "Monolito modular", "tag": "Handler→Service→Repo", "pos": [450, 180], "size": [170, 80] },
+    { "id": "mysql", "type": "database", "label": "MySQL", "sublabel": "fuente de verdad", "pos": [680, 180], "size": [130, 64] },
+    { "id": "meili", "type": "database", "label": "Meilisearch", "sublabel": "búsqueda difusa", "tag": "índice lectura CQRS", "pos": [450, 40], "size": [150, 60] },
+    { "id": "rabbitmq", "type": "messagebus", "label": "RabbitMQ", "sublabel": "bus de eventos", "pos": [450, 320], "size": [140, 64] },
+    { "id": "workers", "type": "backend", "label": "Workers", "sublabel": "consumidores async", "tag": "OCR · correos · purga", "pos": [680, 320], "size": [150, 68] },
+    { "id": "tesseract", "type": "backend", "label": "Tesseract", "sublabel": "OCR recetas", "tag": "dato de salud", "pos": [680, 450], "size": [140, 64] },
+    { "id": "stripe", "type": "external", "label": "Stripe", "sublabel": "pasarela (test)", "pos": [940, 40], "size": [130, 60] },
+    { "id": "smtp", "type": "external", "label": "SMTP", "sublabel": "correo transaccional", "pos": [940, 450], "size": [130, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "On-premise · Windows 11 Pro + IIS 10", "wraps": ["spa", "api", "mysql", "meili", "rabbitmq", "workers", "tesseract"] }
+  ],
+  "connections": [
+    { "id": "c-spa", "from": "cliente", "to": "spa", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "o-spa", "from": "operadores", "to": "spa", "label": "HTTPS" },
+    { "id": "spa-api", "from": "spa", "to": "api", "label": "REST /api/v1", "variant": "emphasis" },
+    { "id": "api-meili", "from": "api", "to": "meili", "label": "consulta (CQRS)" },
+    { "id": "api-mysql", "from": "api", "to": "mysql", "label": "SQL" },
+    { "id": "api-stripe", "from": "api", "to": "stripe", "label": "pago", "variant": "security", "fromSide": "top", "toSide": "left" },
+    { "id": "api-rq", "from": "api", "to": "rabbitmq", "label": "publica eventos", "variant": "dashed" },
+    { "id": "rq-workers", "from": "rabbitmq", "to": "workers", "label": "consume" },
+    { "id": "workers-ocr", "from": "workers", "to": "tesseract", "label": "extrae texto" },
+    { "id": "workers-smtp", "from": "workers", "to": "smtp", "label": "correos", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "workers-mysql", "from": "workers", "to": "mysql", "label": "escritura / purga" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Frontend", "items": ["SPA responsive (PWA) servida por IIS", "TanStack Query + Zustand"] },
+    { "dot": "emerald", "title": "Backend", "items": ["FastAPI monolito modular por capas", "CQRS en catálogo: lectura por Meilisearch", "Workers async desacoplados por RabbitMQ"] },
+    { "dot": "rose", "title": "Seguridad y datos", "items": ["JWT + RBAC por endpoint", "MySQL, Meilisearch y RabbitMQ solo en red interna (127.0.0.1)", "Receta = dato de salud, retención mínima (LPDP)"] },
+    { "dot": "amber", "title": "Post-MVP", "items": ["Integración con ERP como fuente de stock", "Hoy: módulo de stock manual es fuente de verdad"] }
+  ]
+}
