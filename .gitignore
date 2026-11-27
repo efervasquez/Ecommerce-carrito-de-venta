@@ -1,0 +1,15 @@
+.DS_Store
+.harnessed/
+node_modules/
+.claude/
+.lore/
+/.impeccable/
+
+.agents/
+skills-lock.json
+opencode.json
+NOVALE/
+__pycache__/
+*.pyc
+.venv/
+.env
