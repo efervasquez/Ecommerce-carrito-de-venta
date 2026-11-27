@@ -33,6 +33,7 @@ RECETA_BLOCK_MESSAGE = "Debes adjuntar y validar tu receta médica para continua
 LOW_CONFIDENCE_MESSAGE = (
     "No pudimos leer la receta con suficiente confianza. Revisa y confirma los medicamentos"
 )
+TECH_ERROR_MESSAGE = "No se pudo procesar la receta. Intenta nuevamente"
 MAX_SIZE_BYTES = 10 * 1024 * 1024
 POLL_TIMEOUT_SECONDS = 15
 
@@ -185,7 +186,14 @@ class TestAutenticacion:
 
     async def test_job_inexistente_retorna_404(self, api_client):
         headers = await create_authenticated_headers(api_client)
-        response = await api_client.get(f"{OCR_JOBS}/job-{uuid.uuid4().hex}", headers=headers)
+        uploaded = await upload_receta(api_client, headers, "receta_ok")
+        assert uploaded.status_code == 202, uploaded.text
+        real_job_id = uploaded.json()["job_id"]
+        if isinstance(real_job_id, int):
+            missing_job_id = real_job_id + 1_000_003
+        else:
+            missing_job_id = real_job_id[:-1] + ("a" if real_job_id[-1] != "a" else "b")
+        response = await api_client.get(f"{OCR_JOBS}/{missing_job_id}", headers=headers)
         assert_domain_404(response)
 
     async def test_job_ajeno_retorna_404(self, api_client):
@@ -280,11 +288,15 @@ class TestPolling:
         assert result["mensaje"] == expected
         assert await cart_items(api_client, headers) == [], "PA-03: sin inserción parcial"
 
-    @pytest.mark.skip(
-        reason="NO VERIFICADO: el seam acordado define marcadores solo para exito, baja confianza y quiebre de stock; no hay marcador determinista para error tecnico del motor."
-    )
     async def test_estado_error(self, api_client):
-        ...
+        headers = await create_authenticated_headers(api_client)
+        uploaded = await upload_receta(api_client, headers, "receta_error")
+        assert uploaded.status_code == 202, uploaded.text
+        result = await wait_for_job(api_client, headers, uploaded.json()["job_id"])
+
+        assert result["estado"] == "error", result
+        assert result["mensaje"] == TECH_ERROR_MESSAGE
+        assert await cart_items(api_client, headers) == [], "Un error técnico no inserta ítems"
 
 
 class TestConfirmar:
