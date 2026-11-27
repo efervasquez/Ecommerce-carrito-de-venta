@@ -121,6 +121,10 @@ _TERMINOS_ARREPENTIMIENTO = (
     "me equivoque",
     "no lo quiero",
     "no la quiero",
+    "no lo necesito",
+    "no la necesito",
+    "ya no lo necesito",
+    "ya no la necesito",
     "cambio de opinion",
     "cambie de opinion",
 )
