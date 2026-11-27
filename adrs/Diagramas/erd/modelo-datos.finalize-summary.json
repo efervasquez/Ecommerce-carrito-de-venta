@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "erd",
+  "quality": "standard",
+  "specification": {
+    "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\erd\\candidate.json",
+    "sha256": "60b841f9d106fc13f0a2eacb14769a5a9038c79859a2238febc5b04cb9fc6323",
+    "bytes": 9169
+  },
+  "artifact": {
+    "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\erd\\modelo-datos.html",
+    "sha256": "0f237ae4c4fb301619bfe8d66c385f1bc909f89605082a5bb205421a0de12be2",
+    "bytes": 876108
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\erd\\modelo-datos.finalize.json",
+    "summaryReceipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\erd\\modelo-datos.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\erd\\modelo-datos.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-15T05:45:28.212Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 8266
+}
