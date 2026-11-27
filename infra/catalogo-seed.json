@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1,
+    "nombre": "Ibuprofeno 400mg",
+    "componentes": "Ibuprofeno",
+    "imagen_url": "https://placehold.co/640x480?text=Ibuprofeno",
+    "precio_regular": 12.0,
+    "moneda": "PEN",
+    "descuento_porcentaje": 0,
+    "stock_disponible": 10,
+    "precios_bajos": false,
+    "requiere_receta": false
+  },
+  {
+    "id": 2,
+    "nombre": "Paracetamol 500mg",
+    "componentes": "Paracetamol",
+    "imagen_url": "https://placehold.co/640x480?text=Paracetamol",
+    "precio_regular": 8.5,
+    "moneda": "PEN",
+    "descuento_porcentaje": 10,
+    "stock_disponible": 4,
+    "precios_bajos": true,
+    "requiere_receta": false
+  },
+  {
+    "id": 3,
+    "nombre": "Amoxicilina 500mg",
+    "componentes": "Amoxicilina",
+    "imagen_url": "https://placehold.co/640x480?text=Amoxicilina",
+    "precio_regular": 24.9,
+    "moneda": "PEN",
+    "descuento_porcentaje": 5,
+    "stock_disponible": 8,
+    "precios_bajos": false,
+    "requiere_receta": true
+  },
+  {
+    "id": 4,
+    "nombre": "Loratadina 10mg",
+    "componentes": "Loratadina",
+    "imagen_url": "https://placehold.co/640x480?text=Loratadina",
+    "precio_regular": 15.0,
+    "moneda": "PEN",
+    "descuento_porcentaje": 0,
+    "stock_disponible": 15,
+    "precios_bajos": true,
+    "requiere_receta": false
+  },
+  {
+    "id": 5,
+    "nombre": "Omeprazol 20mg",
+    "componentes": "Omeprazol",
+    "imagen_url": "https://placehold.co/640x480?text=Omeprazol",
+    "precio_regular": 18.0,
+    "moneda": "PEN",
+    "descuento_porcentaje": 15,
+    "stock_disponible": 3,
+    "precios_bajos": false,
+    "requiere_receta": false
+  },
+  {
+    "id": 6,
+    "nombre": "Vitamina C 500mg",
+    "componentes": "Ácido ascórbico",
+    "imagen_url": "https://placehold.co/640x480?text=Vitamina+C",
+    "precio_regular": 22.0,
+    "moneda": "PEN",
+    "descuento_porcentaje": 20,
+    "stock_disponible": 12,
+    "precios_bajos": true,
+    "requiere_receta": false
+  },
+  {
+    "id": 7,
+    "nombre": "Salbutamol inhalador",
+    "componentes": "Salbutamol",
+    "imagen_url": "https://placehold.co/640x480?text=Salbutamol",
+    "precio_regular": 31.5,
+    "moneda": "PEN",
+    "descuento_porcentaje": 0,
+    "stock_disponible": 5,
+    "precios_bajos": false,
+    "requiere_receta": true
+  },
+  {
+    "id": 8,
+    "nombre": "Crema de Clotrimazol 1%",
+    "componentes": "Clotrimazol",
+    "imagen_url": "https://placehold.co/640x480?text=Clotrimazol",
+    "precio_regular": 14.75,
+    "moneda": "PEN",
+    "descuento_porcentaje": 0,
+    "stock_disponible": 7,
+    "precios_bajos": false,
+    "requiere_receta": false
+  }
+]
