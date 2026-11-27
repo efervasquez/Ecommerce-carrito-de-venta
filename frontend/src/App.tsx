@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HealthStatus } from './components/HealthStatus';
 import { Activar } from './pages/Activar';
 import { BackofficeDespacho } from './pages/BackofficeDespacho';
+import { BackofficeInventario } from './pages/BackofficeInventario';
 import { BackofficeReclamos } from './pages/BackofficeReclamos';
 import { Catalogo } from './pages/Catalogo';
 import { Carrito } from './pages/Carrito';
@@ -14,6 +15,7 @@ import { DetalleProducto } from './pages/DetalleProducto';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { OcrReceta } from './pages/OcrReceta';
+import { ProductoForm } from './pages/ProductoForm';
 import { Recuperar } from './pages/Recuperar';
 import { ReclamoNuevo } from './pages/ReclamoNuevo';
 import { Reclamos } from './pages/Reclamos';
@@ -40,6 +42,12 @@ export const App: React.FC = () => {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/receta" element={<OcrReceta />} />
           <Route path="/backoffice/despacho" element={<BackofficeDespacho />} />
+          <Route path="/backoffice/inventario" element={<BackofficeInventario />} />
+          <Route path="/backoffice/inventario/nuevo" element={<ProductoForm />} />
+          <Route
+            path="/backoffice/inventario/:id/editar"
+            element={<ProductoForm />}
+          />
           <Route path="/backoffice/reclamos" element={<BackofficeReclamos />} />
           <Route path="/reclamos" element={<Reclamos />} />
           <Route path="/reclamos/nuevo" element={<ReclamoNuevo />} />

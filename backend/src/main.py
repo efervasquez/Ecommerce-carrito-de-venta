@@ -21,6 +21,7 @@ from src.modules.carrito import carrito_router
 from src.modules.despacho import despacho_router
 from src.modules.despacho.seed import SeedRbacMiddleware, ensure_seed_users_once
 from src.modules.health import health_router
+from src.modules.inventario import inventario_router
 from src.modules.ocr import ocr_router
 from src.modules.pagos import pagos_router
 from src.modules.reclamos import reclamos_router
@@ -110,6 +111,7 @@ def create_app() -> FastAPI:
     app.include_router(ocr_router, prefix="/api/v1")
     app.include_router(despacho_router, prefix="/api/v1")
     app.include_router(reclamos_router, prefix="/api/v1")
+    app.include_router(inventario_router, prefix="/api/v1")
 
     return app
 
