@@ -18,6 +18,8 @@ from src.core.rate_limit import (
 from src.modules.auth import auth_router
 from src.modules.catalogo import catalogo_router
 from src.modules.carrito import carrito_router
+from src.modules.despacho import despacho_router
+from src.modules.despacho.seed import SeedRbacMiddleware, ensure_seed_users_once
 from src.modules.health import health_router
 from src.modules.ocr import ocr_router
 from src.modules.pagos import pagos_router
@@ -31,6 +33,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_logging(settings.log_level)
     logger.info("Iniciando aplicacion FastAPI - Botica la Luz", extra={"env": settings.app_env})
     try:
+        await ensure_seed_users_once()
         yield
     finally:
         logger.info("Cerrando recursos y conexiones de la aplicacion")
@@ -59,6 +62,12 @@ def create_app() -> FastAPI:
     app.add_middleware(AuthRateLimitMiddleware)
     app.add_middleware(CatalogRateLimitMiddleware)
     app.add_middleware(CartRateLimitMiddleware)
+
+    # Seed idempotente de usuarios admin/motorizado en entornos de prueba. Se ejecuta
+    # en el primer request porque ASGITransport no dispara el lifespan de FastAPI.
+    # Middleware ASGI puro: BaseHTTPMiddleware cancelaria las tareas de publicacion
+    # de eventos de autenticacion al terminar la respuesta.
+    app.add_middleware(SeedRbacMiddleware)
 
     # Configuracion restrictiva de CORS (ADR-0019)
     app.add_middleware(
@@ -98,6 +107,7 @@ def create_app() -> FastAPI:
     app.include_router(carrito_router, prefix="/api/v1")
     app.include_router(pagos_router, prefix="/api/v1")
     app.include_router(ocr_router, prefix="/api/v1")
+    app.include_router(despacho_router, prefix="/api/v1")
 
     return app
 

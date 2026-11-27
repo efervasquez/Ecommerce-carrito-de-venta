@@ -3,10 +3,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HealthStatus } from './components/HealthStatus';
 import { Activar } from './pages/Activar';
+import { BackofficeDespacho } from './pages/BackofficeDespacho';
 import { Catalogo } from './pages/Catalogo';
 import { Carrito } from './pages/Carrito';
 import { Checkout } from './pages/Checkout';
 import { Confirmacion } from './pages/Confirmacion';
+import { Despacho } from './pages/Despacho';
 import { DetalleProducto } from './pages/DetalleProducto';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
@@ -34,6 +36,8 @@ export const App: React.FC = () => {
           <Route path="/carrito" element={<Carrito />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/receta" element={<OcrReceta />} />
+          <Route path="/backoffice/despacho" element={<BackofficeDespacho />} />
+          <Route path="/despacho" element={<Despacho />} />
           <Route path="/pedidos/:numero" element={<Confirmacion />} />
           <Route path="/catalogo/productos/:id" element={<DetalleProducto />} />
           <Route path="/registro" element={<Registro />} />

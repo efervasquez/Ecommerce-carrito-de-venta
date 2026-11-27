@@ -61,6 +61,13 @@ class Pedido(Base):
     auditoria_receta_pendiente: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     tipo: Mapped[str] = mapped_column(String(16), nullable=False, default="venta")
     estado: Mapped[str] = mapped_column(String(32), nullable=False, default="Registrado")
+    motorizado_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger,
+        ForeignKey("usuarios.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    asignado_en: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     monto: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     moneda: Mapped[str] = mapped_column(String(8), nullable=False, default="PEN")
     creado_en: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)

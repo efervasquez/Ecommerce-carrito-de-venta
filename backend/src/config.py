@@ -80,6 +80,13 @@ class Settings(BaseSettings):
     ocr_confidence_threshold: float = Field(default=65.0, alias="OCR_CONFIDENCE_THRESHOLD")
     tesseract_cmd: str = Field(default="", alias="TESSERACT_CMD")
 
+    # Despacho logistico y seed RBAC (HU-08). Credenciales solo por entorno.
+    seed_rbac_users: bool = Field(default=False, alias="SEED_RBAC_USERS")
+    seed_admin_email: str = Field(default="", alias="SEED_ADMIN_EMAIL")
+    seed_admin_password: str = Field(default="", alias="SEED_ADMIN_PASSWORD")
+    seed_motorizado_email: str = Field(default="", alias="SEED_MOTORIZADO_EMAIL")
+    seed_motorizado_password: str = Field(default="", alias="SEED_MOTORIZADO_PASSWORD")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
