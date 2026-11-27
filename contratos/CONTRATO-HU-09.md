@@ -1,7 +1,7 @@
 # CONTRATO — HU-09 Gestión de reclamos por producto en mal estado, logística inversa en campo y política de cero reembolsos
 
 **Tipo:** Feature  
-**Versión:** v1  
+**Versión:** v2  
 **Estado:** Aprobado (2026-11-26, usuario humano)  
 **Origen:** `HUs/HU-09-logistica-inversa-reclamos-y-cambio-fisico.md`
 
@@ -29,9 +29,9 @@
   - `GET /api/v1/reclamos` (Listado de reclamos; filtrado por cliente dueño o global para admin).
   - `GET /api/v1/reclamos/{id}` (Detalle completo del reclamo, evidencias y estado de reposición).
   - `POST /api/v1/reclamos/{id}/inspeccion-campo` (Inspección física en campo por motorizado: conforme o falla).
-  - `POST /api/v1/reclamos/{id}/reembolso` (Intento de reembolso explícitamente bloqueado con HTTP 405 / 400).
+  - `POST /api/v1/reclamos/{id}/reembolso` (Intento de reembolso explícitamente bloqueado con HTTP 405 Method Not Allowed).
 - **Frontend Web:**
-  - Formulario cliente: `/reclamos/nuevo?pedido_numero=BL-...` (adjuntar foto producto, foto comprobante, motivo).
+  - Formulario cliente: `/reclamos/nuevo?pedido_numero=BL-...` (selector de `producto_id` entre ítems del pedido, adjuntar foto producto, foto comprobante, motivo).
   - Consulta cliente: `/reclamos` (historial de reclamos del usuario autenticado).
   - Vista motorizado: sección de validación física en campo dentro de `/despacho` (3 checks presenciales y registro de entrega o fallo).
   - Panel admin: `/backoffice/reclamos` (supervisión, filtros de estado, visualización de incidencias escaladas).
@@ -45,9 +45,9 @@
 | Caso | Salida esperada | Origen |
 |---|---|---|
 | Sin sesión (sin JWT) | HTTP 401 en todos los endpoints de `/api/v1/reclamos`. | ADR-0004 |
-| Rol `cliente` | Puede registrar reclamos sobre sus propios pedidos `Entregado`, consultar sus propios reclamos. Acceso denegado (HTTP 403) a inspección en campo y backoffice. | **decisión propuesta** |
-| Rol `motorizado` | Puede consultar reclamos asignados a su ruta y registrar la inspección física en campo (`POST .../inspeccion-campo`). | RF-04.3; HU-09 crit. 3/4 |
-| Rol `admin` | Puede ver todos los reclamos, filtrar por estado, auditar fotos y gestionar reclamos escalados a supervisión. | **decisión propuesta** |
+| Rol `cliente` | Puede registrar reclamos sobre sus propios pedidos `Entregado`, consultar sus propios reclamos. Acceso denegado (HTTP 403) a inspección en campo y backoffice. | ADR-0004 |
+| Rol `motorizado` | Puede consultar reclamos asignados a su ruta (heredada de la asignación del pedido de reposición `BL-REP-...` en HU-08) y registrar la inspección física en campo (`POST .../inspeccion-campo`). | RF-04.3; HU-09 crit. 3/4; v2 |
+| Rol `admin` | Puede ver todos los reclamos, filtrar por estado, auditar fotos y gestionar reclamos escalados a supervisión. | Decisión aprobada |
 
 ---
 
@@ -62,7 +62,7 @@ Authorization: Bearer <token_cliente>
 
 Campos:
 - pedido_numero: "BL-..." (string, requerido)
-- producto_id: 123 (int, requerido)
+- producto_id: 123 (int, requerido; en la UI se presenta un selector con los productos del pedido original)
 - motivo: "Producto dañado" (string, requerido)
 - descripcion: "Frasco quebrado al abrir empaque" (string, opcional)
 - foto_producto: <archivo binario JPG/PNG> (requerido)
@@ -79,7 +79,7 @@ Campos:
 | **Formato archivo inválido** | Archivo no es JPG, PNG o PDF | HTTP 422; `{"detail": "Formato de archivo no soportado. Debe ser JPG, PNG o PDF."}`. | ADR-0015 |
 | **Pedido no entregado** | Pedido en `Registrado`, `Preparando producto` o `En camino` | HTTP 409; `{"detail": "Solo se pueden registrar reclamos para pedidos con estado Entregado."}`. | HU-09 crit. 6; PA-04 |
 | **Pedido no pertenece al cliente** | Pedido de otro usuario o inexistente | HTTP 404; `{"detail": "Pedido no encontrado o no pertenece al usuario autenticado."}`. | ADR-0004; RBAC |
-| **Producto no pertenece al pedido** | `producto_id` que no estaba en el pedido | HTTP 422; `{"detail": "El producto indicado no pertenece a los ítems del pedido original."}`. | **decisión propuesta** |
+| **Producto no pertenece al pedido** | `producto_id` que no estaba en el pedido | HTTP 422; `{"detail": "El producto indicado no pertenece a los ítems del pedido original."}`. | Decisión aprobada |
 | **Motivo es arrepentimiento** | Motivo indica error de compra, equivocación o arrepentimiento | HTTP 422; `{"detail": "No proceden reclamos por arrepentimiento o error en la compra. Solo aplica para productos dañados o en mal estado."}`. | HU-09 crit. 5; RF-04.2 |
 
 ---
@@ -106,7 +106,7 @@ Al validarse el registro del reclamo:
    - `estado` = `"Registrado"`.
    - `reclamo_id` = ID del reclamo creado.
 3. Se reserva y descuenta 1 unidad de stock de reemplazo del producto.
-4. El pedido de reposición queda listo para consolidarse en el buzón de despacho de la zona (W-05, HU-08).
+4. El pedido de reposición queda consolidado en el buzón de despacho de la zona (W-05, HU-08). Al asignarse a un motorizado, el reclamo queda disponible para su validación presencial en campo.
 
 ---
 
@@ -136,9 +136,10 @@ Body:
 |---|---|---|---|
 | **Conforme (Éxito)** | `resultado: "conforme"`, los 3 checks en `true` (`comprobante_verificado`, `pertenencia_botica_verificada`, `defecto_fisico_verificado`) | HTTP 200; `{ id, estado: "cerrado_exitoso", mensaje: "Cambio físico completado con éxito." }`. Efectos: Reclamo pasa a `cerrado_exitoso`; pedido de reposición pasa a `Entregado`; producto recogido asentado como `merma_averiada`. | HU-09 crit. 3; Gherkin esc. 1 |
 | **Conforme incompleto** | `resultado: "conforme"` pero algún check en `false` | HTTP 422; `{"detail": "Para dar conformidad se deben validar físicamente los 3 requisitos: comprobante original, pertenencia a Botica la Luz y defecto físico."}`. | HU-09 crit. 3 |
-| **Falla (Intento 1 o 2 adicional)** | `resultado: "falla"`, `intentos_adicionales_realizados < 2` (se incrementa a 1 o 2) | HTTP 200; `{ id, estado: "reintento_pendiente", intentos_adicionales_realizados: X, intentos_restantes: (3 - X), mensaje: "Intento fallido registrado. Se permite reprogramar nuevo intento de cambio." }`. | HU-09 crit. 4; RF-04.3 |
-| **Falla (3er intento adicional alcanzado)** | `resultado: "falla"`, ya tenía 2 intentos adicionales (se incrementa a 3) | HTTP 200; `{ id, estado: "escalado_supervision", intentos_adicionales_realizados: 3, intentos_restantes: 0, mensaje: "Límite de 3 intentos adicionales alcanzado. Reclamo escalado a supervisión." }`. Efectos: Se bloquean nuevos despachos; nuevo producto regresa a stock disponible. | HU-09 crit. 4; Gherkin esc. 2 |
-| **Reintento sobre reclamo ya cerrado o escalado** | Reclamo en `cerrado_exitoso` o `escalado_supervision` | HTTP 409; `{"detail": "El reclamo ya no admite inspecciones en campo (estado final alcanzado)."}`. | **decisión propuesta** |
+| **Falla sin motivo** | `resultado: "falla"`, se omite `motivo_falla` | HTTP 422; `{"detail": "El motivo de la falla es requerido cuando la inspección no es conforme."}`. | v2 (Aprobado humano) |
+| **Falla (Intento 1 o 2 adicional)** | `resultado: "falla"`, con `motivo_falla`, `intentos_adicionales_realizados < 2` (se incrementa a 1 o 2) | HTTP 200; `{ id, estado: "reintento_pendiente", intentos_adicionales_realizados: X, intentos_restantes: (3 - X), mensaje: "Intento fallido registrado. Se permite reprogramar nuevo intento de cambio." }`. | HU-09 crit. 4; RF-04.3 |
+| **Falla (3er intento adicional alcanzado)** | `resultado: "falla"`, con `motivo_falla`, ya tenía 2 intentos adicionales (se incrementa a 3) | HTTP 200; `{ id, estado: "escalado_supervision", intentos_adicionales_realizados: 3, intentos_restantes: 0, mensaje: "Límite de 3 intentos adicionales alcanzado. Reclamo escalado a supervisión." }`. Efectos: Se bloquean nuevos despachos; nuevo producto regresa a stock disponible. | HU-09 crit. 4; Gherkin esc. 2 |
+| **Reintento sobre reclamo ya cerrado o escalado** | Reclamo en `cerrado_exitoso` o `escalado_supervision` | HTTP 409; `{"detail": "El reclamo ya no admite inspecciones en campo (estado final alcanzado)."}`. | Decisión aprobada |
 | **Rol no autorizado** | Rol `cliente` intentando inspeccionar | HTTP 403; `{"detail": "Solo el personal de reparto o administración puede registrar inspecciones en campo."}`. | RBAC |
 
 ---
@@ -147,8 +148,8 @@ Body:
 
 | Caso | Entrada | Salida esperada | Origen |
 |---|---|---|---|
-| Solicitud de reembolso monetario | `POST /api/v1/reclamos/{id}/reembolso` | HTTP 405 Method Not Allowed o HTTP 400 Bad Request; `{"detail": "Política estricta de cero reembolsos: la botica no realiza devoluciones de dinero ni extornos."}`. | HU-09 crit. 5; RF-04.2; PRD §3.2 |
-| Parámetro o acción de extorno | Cualquier payload que intente forzar `accion: "reembolso"` | HTTP 422 / 400; `{"detail": "Acción no permitida: política estricta de reposición física sin reembolso monetario."}`. | HU-09 crit. 5 |
+| Solicitud de reembolso monetario | `POST /api/v1/reclamos/{id}/reembolso` | HTTP 405 Method Not Allowed; `{"detail": "Política estricta de cero reembolsos: la botica no realiza devoluciones de dinero ni extornos."}`. | HU-09 crit. 5; RF-04.2; PRD §3.2; v2 |
+| Parámetro o acción forzada de extorno | Cualquier payload que intente forzar `accion: "reembolso"` | HTTP 422 / 400; `{"detail": "Acción no permitida: política estricta de reposición física sin reembolso monetario."}`. | HU-09 crit. 5 |
 
 ---
 
@@ -161,10 +162,25 @@ GET /api/v1/reclamos?estado=&pedido_numero=
 GET /api/v1/reclamos/{id}
 ```
 
+**Estructura de ítem en el listado (`GET /api/v1/reclamos`):**
+```json
+[
+  {
+    "id": 1,
+    "pedido_origen_numero": "BL-0001",
+    "pedido_reposicion_numero": "BL-REP-0001",
+    "producto_id": 10,
+    "estado": "aprobado",
+    "intentos_adicionales_realizados": 0,
+    "creado_en": "2026-11-26T22:00:00"
+  }
+]
+```
+
 | Caso | Salida esperada | Origen |
 |---|---|---|
-| Listado Cliente | HTTP 200; Devuelve únicamente los reclamos pertenecientes al cliente autenticado. | RBAC |
-| Listado Admin | HTTP 200; Devuelve todos los reclamos; permite filtrar por `estado` (`aprobado`, `reintento_pendiente`, `cerrado_exitoso`, `escalado_supervision`) y por `pedido_numero`. | HU-09 crit. 4/6 |
+| Listado Cliente | HTTP 200; Devuelve únicamente los reclamos pertenecientes al cliente autenticado. | RBAC; v2 |
+| Listado Admin | HTTP 200; Devuelve todos los reclamos con la estructura definida; permite filtrar por `estado` (`aprobado`, `reintento_pendiente`, `cerrado_exitoso`, `escalado_supervision`) y por `pedido_numero`. | HU-09 crit. 4/6; v2 |
 | Reclamo ajeno (cliente) | Si un cliente intenta ver `GET /api/v1/reclamos/{id}` de otro usuario -> HTTP 404. | Seguridad LPDP |
 
 ---
@@ -202,7 +218,7 @@ GET /api/v1/reclamos/{id}
 
 ---
 
-## Decisiones propuestas (no venían en la tarea)
+## Decisiones acordadas
 
 | # | Decisión | Por qué hace falta | Estado |
 |---|---|---|---|
@@ -210,6 +226,7 @@ GET /api/v1/reclamos/{id}
 | 2 | Estados exactos del Reclamo: `"aprobado"`, `"reintento_pendiente"`, `"cerrado_exitoso"`, `"escalado_supervision"`. | Provee una máquina de estados clara para los reportes de calidad y el panel administrativo. | Aprobada por usuario humano |
 | 3 | Prefijo de número de pedido de reposición: `BL-REP-<numero_origen>`. | Permite trazabilidad inmediata entre el pedido original y su orden de logística inversa. | Aprobada por usuario humano |
 | 4 | Al escalar a supervisión (tras agotarse el 3er intento adicional), el producto nuevo no entregado se devuelve automáticamente al stock disponible y el reclamo queda bloqueado para nuevos despachos automáticos. | Cumple ADR-0003 y evita desbalance contable/físico de existencias. | Aprobada por usuario humano |
+| 5 | Selector de `producto_id` en UI `/reclamos/nuevo`, validación de `motivo_falla` con HTTP 422 si falla, HTTP 405 en endpoint de reembolso, esquema estándar de lista GET y asignación de motorizado vinculada a pedido de reposición. | Precisión de los 5 puntos reportados por el equipo. | Aprobada por usuario humano |
 
 ---
 
@@ -222,15 +239,9 @@ GET /api/v1/reclamos/{id}
 
 ---
 
-## Preguntas abiertas para el humano
-
-1. ¿Las 4 decisiones propuestas (almacenamiento de evidencias en `./uploads/reclamos/`, máquina de 4 estados, prefijo `BL-REP-`, y liberación de stock al escalar a supervisión) son correctas?
-2. ¿Aprobamos este contrato `CONTRATO-HU-09.md` v1 para crear la rama `feat/hu-09-logistica-inversa` y proceder con la invocación de **TESTER** y **DEV** (usando `opencode`, tal como solicitaste)?
-
----
-
 ## Changelog
 
 | Versión | Fecha | Cambio | Motivo | Aprobado por |
 |---|---|---|---|---|
 | v1 | 2026-11-26 | Versión inicial del contrato HU-09 | Definición de logística inversa, validación en campo y cero reembolsos | Aprobado por usuario humano |
+| v2 | 2026-11-26 | Aclaraciones: selector producto_id en UI, motivo_falla obligatorio con 422 si falla, HTTP 405 en endpoint de reembolso, esquema de ítems en listado GET y asignación de motorizado heredada de pedido de reposición | Reporte de huecos del TESTER | Aprobado por usuario humano |
