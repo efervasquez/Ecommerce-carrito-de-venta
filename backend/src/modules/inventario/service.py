@@ -264,7 +264,7 @@ class InventarioService:
         )
 
         return StockAjusteResponse(
-            id=stock.id,
+            id=producto_id,
             producto_id=producto_id,
             disponible=stock.disponible,
             reservado=stock.reservado,
