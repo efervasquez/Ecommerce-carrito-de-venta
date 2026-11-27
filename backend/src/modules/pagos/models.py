@@ -55,6 +55,10 @@ class Pedido(Base):
         BigInteger, ForeignKey("zonas.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     metodo_entrega: Mapped[str] = mapped_column(String(16), nullable=False)
+    receta_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("recetas.id", ondelete="SET NULL"), nullable=True
+    )
+    auditoria_receta_pendiente: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     tipo: Mapped[str] = mapped_column(String(16), nullable=False, default="venta")
     estado: Mapped[str] = mapped_column(String(32), nullable=False, default="Registrado")
     monto: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)

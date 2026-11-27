@@ -28,6 +28,9 @@ class Carrito(Base):
         String(64), ForeignKey("sesiones.id", ondelete="CASCADE"), nullable=False, unique=True
     )
     estado: Mapped[str] = mapped_column(String(24), nullable=False, default="activo")
+    receta_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("recetas.id", ondelete="SET NULL"), nullable=True
+    )
     reserva_expira_en: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     creado_en: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
 

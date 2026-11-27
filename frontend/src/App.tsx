@@ -10,6 +10,7 @@ import { Confirmacion } from './pages/Confirmacion';
 import { DetalleProducto } from './pages/DetalleProducto';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
+import { OcrReceta } from './pages/OcrReceta';
 import { Recuperar } from './pages/Recuperar';
 import { Registro } from './pages/Registro';
 import { Restablecer } from './pages/Restablecer';
@@ -32,6 +33,7 @@ export const App: React.FC = () => {
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/carrito" element={<Carrito />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/receta" element={<OcrReceta />} />
           <Route path="/pedidos/:numero" element={<Confirmacion />} />
           <Route path="/catalogo/productos/:id" element={<DetalleProducto />} />
           <Route path="/registro" element={<Registro />} />

@@ -73,6 +73,13 @@ class Settings(BaseSettings):
     )
     pedido_secuencia_base: int = Field(default=10000, alias="PEDIDO_SECUENCIA_BASE")
 
+    # OCR de recetas (ADR-0008, ADR-0015)
+    ocr_test_mode: bool = Field(default=False, alias="OCR_TEST_MODE")
+    ocr_worker_enabled: bool = Field(default=True, alias="OCR_WORKER_ENABLED")
+    ocr_poll_interval_ms: int = Field(default=1500, alias="OCR_POLL_INTERVAL_MS")
+    ocr_confidence_threshold: float = Field(default=65.0, alias="OCR_CONFIDENCE_THRESHOLD")
+    tesseract_cmd: str = Field(default="", alias="TESSERACT_CMD")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

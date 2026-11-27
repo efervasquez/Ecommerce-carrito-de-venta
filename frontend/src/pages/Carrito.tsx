@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { LeerReceta } from '../components/LeerReceta';
 import {
   CartItem,
   CartResponse,
@@ -80,6 +81,7 @@ export const Carrito: React.FC = () => {
         <h1 style={styles.title}>Carrito</h1>
         <Link to="/catalogo" style={styles.link}>Seguir comprando</Link>
       </header>
+      <LeerReceta />
       {message && <p role="status" style={styles.message}>{message}</p>}
       {cart.reserva_expira_en && (
         <p role="status" style={styles.expiration}>Reserva expira en {formatDate(cart.reserva_expira_en)}</p>

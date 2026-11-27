@@ -19,6 +19,7 @@ from src.modules.auth import auth_router
 from src.modules.catalogo import catalogo_router
 from src.modules.carrito import carrito_router
 from src.modules.health import health_router
+from src.modules.ocr import ocr_router
 from src.modules.pagos import pagos_router
 
 logger = logging.getLogger(__name__)
@@ -96,6 +97,7 @@ def create_app() -> FastAPI:
     app.include_router(catalogo_router, prefix="/api/v1")
     app.include_router(carrito_router, prefix="/api/v1")
     app.include_router(pagos_router, prefix="/api/v1")
+    app.include_router(ocr_router, prefix="/api/v1")
 
     return app
 

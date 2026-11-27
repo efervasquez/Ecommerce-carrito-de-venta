@@ -18,6 +18,7 @@ async def run_worker() -> None:
         extra={"env": settings.app_env, "service": "background-worker"},
     )
 
+    consumidor_ocr = None
     try:
         connection = await get_broker_connection()
         channel = await connection.channel()
@@ -30,6 +31,12 @@ async def run_worker() -> None:
             },
         )
         await channel.close()
+
+        if settings.ocr_worker_enabled:
+            from src.workers.ocr_consumer import consumir_ocr
+
+            consumidor_ocr = asyncio.create_task(consumir_ocr())
+            logger.info("Consumidor de cola OCR iniciado.")
 
         # En Sprint 0 no hay colas ni consumidores de negocio (ADR-0007 / SPRINT0.md).
         # El proceso valida conectividad y queda listo para ejecucion continua.
@@ -67,6 +74,12 @@ async def run_worker() -> None:
         )
         sys.exit(1)
     finally:
+        if consumidor_ocr is not None and not consumidor_ocr.done():
+            consumidor_ocr.cancel()
+            try:
+                await consumidor_ocr
+            except asyncio.CancelledError:
+                pass
         logger.info("Cerrando conexion de worker con broker...")
         await close_broker_connection()
         logger.info("Proceso worker finalizado ordenadamente.")

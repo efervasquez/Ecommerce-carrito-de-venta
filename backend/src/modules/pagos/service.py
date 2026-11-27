@@ -16,6 +16,7 @@ from src.modules.carrito.inventory import LocalMySQLInventoryProvider
 from src.modules.carrito.models import Carrito, CarritoItem
 from src.modules.carrito.schemas import CheckoutResponse
 from src.modules.carrito.service import CartActor, CartService
+from src.modules.ocr.constants import RECETA_BLOCK_MESSAGE
 from src.modules.pagos import gateway
 from src.modules.pagos.models import Direccion, Pago, Pedido, PedidoItem, Zona
 from src.modules.pagos.schemas import (
@@ -110,6 +111,17 @@ class PagoService:
         payload: Optional[CheckoutInput],
     ):
         """Guest: reserva 24h sin pago. Autenticado: prorroga + PaymentIntent."""
+        # W-03 (HU-06): los productos con receta requieren una receta validada.
+        carrito_actual = await self.cart_service._get_or_create_cart(session, actor)
+        if carrito_actual.receta_id is None:
+            items_actuales = await self.cart_service._get_items(session, carrito_actual.id)
+            for item_actual in items_actuales:
+                producto_actual = await self.cart_service._get_product(
+                    item_actual.producto_id
+                )
+                if producto_actual.get("requiere_receta"):
+                    raise HTTPException(status_code=409, detail=RECETA_BLOCK_MESSAGE)
+
         if actor.is_guest or actor.user_id is None:
             respuesta = await self.cart_service.checkout_guest(session, actor)
             respuesta.requiere_autenticacion = True
