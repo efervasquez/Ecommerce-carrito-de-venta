@@ -1,7 +1,7 @@
 # CONTRATO — HU-08 Buzón de despacho y ciclo de vida de pedidos
 
 **Tipo:** Feature
-**Versión:** v1
+**Versión:** v2
 **Estado:** Aprobado (2026-11-27, usuario humano)
 **Origen:** `HUs/HU-08-buzon-despacho-logistico-y-ciclo-vida-pedidos.md`
 
@@ -33,7 +33,7 @@
 |---|---|---|
 | Sin sesión | HTTP 401 en todos los endpoints de despacho. | ADR-0004 |
 | Rol `admin` | Puede ver el buzón, agrupar por zona, asignar lotes y ver historial. | **decisión propuesta** |
-| Rol `motorizado` | Puede ver pendientes de su zona, auto-asignarse (FIFO) y avanzar estados de sus pedidos. | **decisión propuesta** |
+| Rol `motorizado` | Puede ver pendientes de su zona, auto-asignarse (FIFO), avanzar estados de sus pedidos y consultar `GET /api/v1/despacho/pedidos` (le devuelve **solo sus pedidos**; el buzón completo es solo `admin`). | **decisión propuesta**; v2 |
 | Rol `cliente` | HTTP 403 en endpoints de despacho. | **decisión propuesta** |
 
 - Usuarios `admin` y `motorizado` se crean mediante **seed** con credenciales tomadas de variables de entorno (sin secretos en el repositorio). | **decisión propuesta**
@@ -189,3 +189,4 @@ Ninguna. Decisiones 2–5 aprobadas por el usuario humano (2026-11-27); el resto
 | Versión | Fecha | Cambio | Motivo | Aprobado por |
 |---|---|---|---|---|
 | v1 | 2026-11-27 | Versión inicial; asignación simple + 4 estados, roles y seed, incidencia fuera de flujo | Inicio de HU-08 y respuestas del humano | Usuario humano |
+| v2 | 2026-11-27 | Aclara que GET /api/v1/despacho/pedidos para motorizado devuelve solo sus pedidos | Desviación aceptada del DEV en arbitraje | Usuario humano |
