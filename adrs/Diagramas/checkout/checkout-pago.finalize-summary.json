@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\candidate.json",
+    "sha256": "3e9921e75955f543414accf76b231f8384cbb9e6949dcbe170be607afc8b40dd",
+    "bytes": 3632
+  },
+  "artifact": {
+    "path": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\checkout-pago.html",
+    "sha256": "111637dc3b54af25581a623d0113c4a511c32c1caf21075bd73ea97533020d29",
+    "bytes": 819688
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\checkout-pago.finalize.json",
+    "summaryReceipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\checkout-pago.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Temp2\\Ecommerce-carrito-de-venta\\adrs\\Diagramas\\checkout\\checkout-pago.browser-check.json"
+  },
+  "update": {
+    "status": "update_available",
+    "installedVersion": "3.1.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.2.0",
+    "severity": "normal",
+    "checkedAt": "2026-11-01T01:31:28.960Z",
+    "source": "cache",
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.1.0 → 3.2.0. A previous check at 2026-11-01T01:31:28.960Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.2.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "eventKey": "archify@sha256:70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6557
+}
