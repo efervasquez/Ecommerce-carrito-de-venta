@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "Modelo de datos — Botica la Luz",
+    "locale": "es",
+    "output": "adrs/Diagramas/erd/modelo-datos.html",
+    "quality_profile": "standard"
+  },
+  "layout": {
+    "mode": "grid",
+    "entityW": 210,
+    "gapX": 20,
+    "gapY": 40
+  },
+  "entities": [
+    {
+      "id": "usuario",
+      "label": "usuario",
+      "tag": "accounts",
+      "row": 0,
+      "col": 0,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "email", "type": "varchar", "key": "uk" },
+        { "name": "password_hash", "type": "varchar" },
+        { "name": "rol", "type": "varchar" },
+        { "name": "estado", "type": "varchar" },
+        { "name": "created_at", "type": "datetime" }
+      ]
+    },
+    {
+      "id": "categoria",
+      "label": "categoria",
+      "tag": "catalog",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "nombre", "type": "varchar", "key": "uk" },
+        { "name": "activo", "type": "bool" }
+      ]
+    },
+    {
+      "id": "producto",
+      "label": "producto",
+      "tag": "catalog",
+      "row": 1,
+      "col": 1,
+      "width": 215,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "categoria_id", "type": "bigint", "key": "fk", "references": "categoria.id" },
+        { "name": "nombre", "type": "varchar" },
+        { "name": "componentes", "type": "text" },
+        { "name": "precio_regular", "type": "decimal" },
+        { "name": "presentacion", "type": "varchar" },
+        { "name": "requiere_receta", "type": "bool" },
+        { "name": "oferta_pct", "type": "decimal" },
+        { "name": "precios_bajos", "type": "bool" },
+        { "name": "stock_disponible", "type": "int" },
+        { "name": "contraindicaciones", "type": "text" },
+        { "name": "precauciones", "type": "text" },
+        { "name": "reacciones_adversas", "type": "text" },
+        { "name": "metodos_entrega", "type": "varchar" },
+        { "name": "activo", "type": "bool" }
+      ]
+    },
+    {
+      "id": "sesion",
+      "label": "sesion",
+      "tag": "cart",
+      "row": 0,
+      "col": 2,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "usuario_id", "type": "bigint", "key": "fk", "references": "usuario.id" },
+        { "name": "token", "type": "varchar", "key": "uk" },
+        { "name": "expires_at", "type": "datetime" }
+      ]
+    },
+    {
+      "id": "carrito_item",
+      "label": "carrito_item",
+      "tag": "cart",
+      "row": 1,
+      "col": 2,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "sesion_id", "type": "bigint", "key": "fk", "references": "sesion.id" },
+        { "name": "producto_id", "type": "bigint", "key": "fk", "references": "producto.id" },
+        { "name": "cantidad", "type": "int" },
+        { "name": "reservado_at", "type": "datetime" },
+        { "name": "expires_at", "type": "datetime" }
+      ]
+    },
+    {
+      "id": "pedido",
+      "label": "pedido",
+      "tag": "orders",
+      "row": 0,
+      "col": 3,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "usuario_id", "type": "bigint", "key": "fk", "references": "usuario.id" },
+        { "name": "despacho_id", "type": "bigint", "key": "fk", "references": "despacho.id" },
+        { "name": "estado", "type": "varchar" },
+        { "name": "total", "type": "decimal" },
+        { "name": "direccion", "type": "varchar" },
+        { "name": "zona", "type": "varchar" },
+        { "name": "metodo_entrega", "type": "varchar" },
+        { "name": "created_at", "type": "datetime" }
+      ]
+    },
+    {
+      "id": "pedido_item",
+      "label": "pedido_item",
+      "tag": "orders",
+      "row": 1,
+      "col": 3,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "pedido_id", "type": "bigint", "key": "fk", "references": "pedido.id" },
+        { "name": "producto_id", "type": "bigint", "key": "fk", "references": "producto.id" },
+        { "name": "cantidad", "type": "int" },
+        { "name": "precio_unitario", "type": "decimal" }
+      ]
+    },
+    {
+      "id": "pago",
+      "label": "pago",
+      "tag": "orders",
+      "row": 2,
+      "col": 3,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "pedido_id", "type": "bigint", "key": "fk", "references": "pedido.id" },
+        { "name": "stripe_id", "type": "varchar", "key": "uk" },
+        { "name": "idempotency_key", "type": "varchar", "key": "uk" },
+        { "name": "monto", "type": "decimal" },
+        { "name": "estado", "type": "varchar" },
+        { "name": "created_at", "type": "datetime" }
+      ]
+    },
+    {
+      "id": "despacho",
+      "label": "despacho",
+      "tag": "fulfillment",
+      "row": 0,
+      "col": 4,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "motorizado_id", "type": "bigint", "key": "fk", "references": "usuario.id" },
+        { "name": "zona", "type": "varchar" },
+        { "name": "estado", "type": "varchar" },
+        { "name": "orden_llegada", "type": "int" }
+      ]
+    },
+    {
+      "id": "reclamo",
+      "label": "reclamo",
+      "tag": "fulfillment",
+      "row": 1,
+      "col": 4,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "pedido_id", "type": "bigint", "key": "fk", "references": "pedido.id" },
+        { "name": "foto_url", "type": "varchar" },
+        { "name": "comprobante_url", "type": "varchar" },
+        { "name": "intentos", "type": "int" },
+        { "name": "estado", "type": "varchar" },
+        { "name": "created_at", "type": "datetime" }
+      ]
+    },
+    {
+      "id": "receta",
+      "label": "receta",
+      "tag": "ocr",
+      "row": 0,
+      "col": 5,
+      "attributes": [
+        { "name": "id", "type": "bigint", "key": "pk" },
+        { "name": "usuario_id", "type": "bigint", "key": "fk", "references": "usuario.id" },
+        { "name": "archivo_url", "type": "varchar" },
+        { "name": "estado", "type": "varchar" },
+        { "name": "resultado", "type": "text" },
+        { "name": "created_at", "type": "datetime" }
+      ]
+    }
+  ],
+  "relationships": [
+    { "id": "producto-categoria", "from": "producto", "to": "categoria", "label": "pertenece a", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "sesion-usuario", "from": "sesion", "to": "usuario", "label": "guest/autenticada", "fromCardinality": "many", "toCardinality": "one", "fromOptional": true, "identifying": false },
+    { "id": "carrito-sesion", "from": "carrito_item", "to": "sesion", "label": "armado en", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "carrito-producto", "from": "carrito_item", "to": "producto", "label": "reserva", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "pedido-usuario", "from": "pedido", "to": "usuario", "label": "comprado por", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "pedido-despacho", "from": "pedido", "to": "despacho", "label": "asignado a ruta", "fromCardinality": "many", "toCardinality": "one", "fromOptional": true, "identifying": false },
+    { "id": "pedido-item-pedido", "from": "pedido_item", "to": "pedido", "label": "detalla", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "pedido-item-producto", "from": "pedido_item", "to": "producto", "label": "vende", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "pago-pedido", "from": "pago", "to": "pedido", "label": "liquida", "fromCardinality": "many", "toCardinality": "one", "fromOptional": true, "identifying": false },
+    { "id": "despacho-motorizado", "from": "despacho", "to": "usuario", "label": "asignado a", "fromCardinality": "many", "toCardinality": "one", "fromOptional": true, "identifying": false },
+    { "id": "reclamo-pedido", "from": "reclamo", "to": "pedido", "label": "reclama", "fromCardinality": "many", "toCardinality": "one" },
+    { "id": "receta-usuario", "from": "receta", "to": "usuario", "label": "adjuntada por", "fromCardinality": "many", "toCardinality": "one" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Reserva de stock", "items": ["carrito_item es la reserva: stock_disponible se descuenta al agregar y se restaura al vencer expires_at (purga por Tarea de Windows).", "producto.stock_disponible es la única cifra de existencia del MVP."] },
+    { "dot": "amber", "title": "Relaciones opcionales", "items": ["sesion puede ser guest (usuario_id nulo).", "pedido puede existir antes de despacho y antes de pago.", "despacho puede quedar sin motorizado asignado."] },
+    { "dot": "emerald", "title": "Dominios", "items": ["accounts: usuario. catalog: categoria, producto. cart: sesion, carrito_item. orders: pedido, pedido_item, pago. fulfillment: despacho, reclamo. ocr: receta.", "Tipos de columna simplificados (varchar/decimal): longitud y precisión se fijan en la migración (Alembic)."] }
+  ]
+}
