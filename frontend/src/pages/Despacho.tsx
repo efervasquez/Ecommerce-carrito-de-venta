@@ -8,6 +8,7 @@ import {
   getMisPedidos,
   getPendientes,
 } from '../services/despacho';
+import { InspeccionCampo } from '../modules/reclamos/InspeccionCampo';
 
 export const Despacho: React.FC = () => {
   const queryClient = useQueryClient();
@@ -160,6 +161,8 @@ export const Despacho: React.FC = () => {
           />
         )}
       </section>
+
+      <InspeccionCampo />
     </main>
   );
 };

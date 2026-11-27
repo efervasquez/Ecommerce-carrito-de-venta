@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HealthStatus } from './components/HealthStatus';
 import { Activar } from './pages/Activar';
 import { BackofficeDespacho } from './pages/BackofficeDespacho';
+import { BackofficeReclamos } from './pages/BackofficeReclamos';
 import { Catalogo } from './pages/Catalogo';
 import { Carrito } from './pages/Carrito';
 import { Checkout } from './pages/Checkout';
@@ -14,6 +15,8 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { OcrReceta } from './pages/OcrReceta';
 import { Recuperar } from './pages/Recuperar';
+import { ReclamoNuevo } from './pages/ReclamoNuevo';
+import { Reclamos } from './pages/Reclamos';
 import { Registro } from './pages/Registro';
 import { Restablecer } from './pages/Restablecer';
 
@@ -37,6 +40,9 @@ export const App: React.FC = () => {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/receta" element={<OcrReceta />} />
           <Route path="/backoffice/despacho" element={<BackofficeDespacho />} />
+          <Route path="/backoffice/reclamos" element={<BackofficeReclamos />} />
+          <Route path="/reclamos" element={<Reclamos />} />
+          <Route path="/reclamos/nuevo" element={<ReclamoNuevo />} />
           <Route path="/despacho" element={<Despacho />} />
           <Route path="/pedidos/:numero" element={<Confirmacion />} />
           <Route path="/catalogo/productos/:id" element={<DetalleProducto />} />
