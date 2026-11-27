@@ -1,7 +1,7 @@
 # CONTRATO — HU-07 Pasarela de pagos Stripe Sandbox
 
 **Tipo:** Feature
-**Versión:** v1
+**Versión:** v2
 **Estado:** Aprobado (2026-11-25, usuario humano)
 **Origen:** `HUs/HU-07-pasarela-de-pagos-stripe-sandbox.md`
 
@@ -80,6 +80,7 @@ Body (autenticado): { direccion_id?: int, metodo_entrega: "delivery" | "retiro" 
 | `metodo_entrega = "delivery"` sin `direccion_id` o dirección ajena | HTTP 409/404 según caso; no contacta a Stripe. | **decisión propuesta** |
 | `metodo_entrega = "retiro"` | `direccion_id` se ignora; entrega en botica. | **decisión propuesta** |
 | Carrito vacío | HTTP 409; `"El carrito está vacío"`. | **decisión propuesta** |
+| Carrito con `requiere_receta` sin receta validada | HTTP 409; `"Debes adjuntar y validar tu receta médica para continuar con el pago"`. | W-03 (ADR-0008); CONTRATO-HU-06 |
 | Stock insuficiente al reservar | HTTP 409; `"Stock máximo disponible alcanzado (N unidades)"`; no contacta a Stripe. | HU-05; ADR-0012 |
 
 La respuesta nunca incluye datos de tarjeta. Solo se persisten identificadores de Stripe (`payment_intent_id`) y la clave de idempotencia.
@@ -231,3 +232,4 @@ Ninguna. Las decisiones 1–11 quedaron aprobadas por el usuario humano el 2026-
 | Versión | Fecha | Cambio | Motivo | Aprobado por |
 |---|---|---|---|---|
 | v1 | 2026-11-25 | Versión inicial; pago solo autenticado y captura de entrega en HU-07 | Inicio de HU-07 y respuestas del humano | Usuario humano |
+| v2 | 2026-11-27 | Añade bloqueo por receta (W-03) al checkout autenticado | HU-06 implementa W-03 diferido | Usuario humano |
