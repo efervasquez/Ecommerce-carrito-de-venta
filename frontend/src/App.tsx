@@ -6,6 +6,7 @@ import { Activar } from './pages/Activar';
 import { BackofficeDespacho } from './pages/BackofficeDespacho';
 import { BackofficeInventario } from './pages/BackofficeInventario';
 import { BackofficeReclamos } from './pages/BackofficeReclamos';
+import { BackofficeReportes } from './pages/BackofficeReportes';
 import { Catalogo } from './pages/Catalogo';
 import { Carrito } from './pages/Carrito';
 import { Checkout } from './pages/Checkout';
@@ -49,6 +50,7 @@ export const App: React.FC = () => {
             element={<ProductoForm />}
           />
           <Route path="/backoffice/reclamos" element={<BackofficeReclamos />} />
+          <Route path="/backoffice/reportes" element={<BackofficeReportes />} />
           <Route path="/reclamos" element={<Reclamos />} />
           <Route path="/reclamos/nuevo" element={<ReclamoNuevo />} />
           <Route path="/despacho" element={<Despacho />} />

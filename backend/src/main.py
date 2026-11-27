@@ -25,6 +25,7 @@ from src.modules.inventario import inventario_router
 from src.modules.ocr import ocr_router
 from src.modules.pagos import pagos_router
 from src.modules.reclamos import reclamos_router
+from src.modules.reportes import reportes_router
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +113,7 @@ def create_app() -> FastAPI:
     app.include_router(despacho_router, prefix="/api/v1")
     app.include_router(reclamos_router, prefix="/api/v1")
     app.include_router(inventario_router, prefix="/api/v1")
+    app.include_router(reportes_router, prefix="/api/v1")
 
     return app
 
