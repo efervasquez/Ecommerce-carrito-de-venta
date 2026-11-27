@@ -244,6 +244,12 @@ function archivoInputs(): HTMLInputElement[] {
   return Array.from(document.querySelectorAll('input[type="file"]'));
 }
 
+function productoSelector(): HTMLInputElement | HTMLSelectElement | null {
+  return document.querySelector(
+    '#producto_id, [name="producto_id"]',
+  ) as HTMLInputElement | HTMLSelectElement | null;
+}
+
 async function puedeEnviar() {
   const botones = screen.queryAllByRole('button', { name: /registrar|enviar|reclamar/i });
   if (botones.length > 0) {
@@ -255,7 +261,7 @@ async function puedeEnviar() {
 }
 
 describe('HU-09 formulario /reclamos/nuevo — registro con evidencias', () => {
-  it('precarga el pedido y exige motivo y las dos evidencias', async () => {
+  it('precarga el pedido y exige selector de producto, motivo y las dos evidencias', async () => {
     await setSession('token-cliente-hu09', {
       id: 9,
       email: 'cliente@ejemplo.com',
@@ -276,6 +282,21 @@ describe('HU-09 formulario /reclamos/nuevo — registro con evidencias', () => {
       expect(prefilled, 'El formulario debe tomar pedido_numero de la URL').toBe(true);
     });
 
+    await waitFor(() => {
+      const selector = productoSelector();
+      expect(
+        selector,
+        'El contrato v2 exige un selector de producto_id (ítems del pedido)',
+      ).not.toBeNull();
+      if (selector instanceof HTMLSelectElement) {
+        const valores = Array.from(selector.options).map((opt) => opt.value);
+        expect(
+          valores,
+          'El selector debe ofrecer los productos del pedido (producto_id 55)',
+        ).toContain('55');
+      }
+    });
+
     expect(texto()).toContain('motivo');
     expect(archivoInputs().length).toBeGreaterThanOrEqual(2);
     expect(
@@ -283,7 +304,7 @@ describe('HU-09 formulario /reclamos/nuevo — registro con evidencias', () => {
     ).toBeGreaterThan(0);
   });
 
-  it('envía el reclamo por multipart con pedido, motivo y las dos evidencias', async () => {
+  it('envía el reclamo por multipart con pedido, producto, motivo y las dos evidencias', async () => {
     await setSession('token-cliente-hu09', {
       id: 9,
       email: 'cliente@ejemplo.com',
@@ -300,16 +321,18 @@ describe('HU-09 formulario /reclamos/nuevo — registro con evidencias', () => {
     const motivo = primerCampoMotivo();
     if (motivo) fireEvent.change(motivo, { target: { value: 'Producto dañado' } });
 
-    const producto = document.querySelector('#producto_id') as
-      | HTMLInputElement
-      | HTMLSelectElement
-      | null;
-    if (producto) {
-      const valor =
-        producto instanceof HTMLSelectElement
-          ? producto.options[producto.options.length - 1]?.value || '55'
-          : '55';
-      fireEvent.change(producto, { target: { value: valor } });
+    await waitFor(() => {
+      const selector = productoSelector();
+      expect(
+        selector,
+        'El contrato v2 exige un selector de producto_id (ítems del pedido)',
+      ).not.toBeNull();
+    });
+    const producto = productoSelector()!;
+    if (producto instanceof HTMLSelectElement) {
+      fireEvent.change(producto, { target: { value: '55' } });
+    } else {
+      fireEvent.change(producto, { target: { value: '55' } });
     }
 
     const inputs = archivoInputs();
@@ -332,6 +355,7 @@ describe('HU-09 formulario /reclamos/nuevo — registro con evidencias', () => {
       expect(call![1]!.body instanceof FormData).toBe(true);
       const form = call![1]!.body as FormData;
       expect(String(form.get('pedido_numero') ?? '')).toContain(PEDIDO);
+      expect(String(form.get('producto_id') ?? '')).toBe('55');
       expect(String(form.get('motivo') ?? '')).not.toBe('');
       expect(form.get('foto_producto')).toBeTruthy();
       expect(form.get('foto_comprobante')).toBeTruthy();

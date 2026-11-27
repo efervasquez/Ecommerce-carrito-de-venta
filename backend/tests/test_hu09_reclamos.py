@@ -1,6 +1,6 @@
 """Pruebas de caja negra para HU-09 (reclamos, logistica inversa y cero reembolsos).
 
-Escritas desde `contratos/CONTRATO-HU-09.md` v1 (aprobado), sin inspeccionar la
+Escritas desde `contratos/CONTRATO-HU-09.md` v2 (aprobado), sin inspeccionar la
 implementacion. Rutas, estados, roles, campos y textos se toman de la seccion
 "Nombres que no se negocian" y de las tablas de comportamiento del contrato.
 
@@ -88,6 +88,9 @@ MSG_ARRERPENTIMIENTO = (
 MSG_CONFORMIDAD_INCOMPLETA = (
     "Para dar conformidad se deben validar físicamente los 3 requisitos: "
     "comprobante original, pertenencia a Botica la Luz y defecto físico."
+)
+MSG_FALLA_SIN_MOTIVO = (
+    "El motivo de la falla es requerido cuando la inspección no es conforme."
 )
 MSG_CERRADO_EXITOSO = "Cambio físico completado con éxito."
 MSG_REINTENTO = (
@@ -504,6 +507,30 @@ def extract_list(body) -> list:
     return []
 
 
+CAMPOS_ITEM_LISTA = (
+    "id",
+    "pedido_origen_numero",
+    "pedido_reposicion_numero",
+    "producto_id",
+    "estado",
+    "intentos_adicionales_realizados",
+    "creado_en",
+)
+
+
+def assert_estructura_listado(body) -> list:
+    """Valida el esquema de ítem del listado definido en el contrato v2."""
+    items = extract_list(body)
+    for item in items:
+        assert isinstance(item, dict), f"Ítem de listado inválido: {item!r}"
+        for campo in CAMPOS_ITEM_LISTA:
+            assert campo in item, (
+                f"Falta el campo '{campo}' en el ítem del listado: {item}"
+            )
+        assert item["estado"] in {APROBADO, REINTENTO, CERRADO, ESCALADO}, item
+    return items
+
+
 def assert_domain_404(response) -> None:
     assert response.status_code == 404, response.text
     assert response.json().get("detail") != "Not Found", (
@@ -765,6 +792,21 @@ class TestInspeccionCampo:
             "Una conformidad incompleta no debe cambiar el estado del reclamo"
         )
 
+    async def test_falla_sin_motivo_retorna_422(self, make_client):
+        order, reclamo = await reclamo_aprobado(make_client)
+        body = inspeccion_body("falla")
+        body.pop("motivo_falla")
+        response = await inspeccionar(order, reclamo["id"], body=body)
+        assert response.status_code == 422, response.text
+        assert response.json()["detail"] == MSG_FALLA_SIN_MOTIVO
+
+        detalle = await order["client"].get(
+            f"{RECLAMOS}/{reclamo['id']}", headers=order["headers"]
+        )
+        assert detalle.json()["estado"] == APROBADO, (
+            "Una falla sin motivo no debe registrar intento"
+        )
+
     async def test_fallas_secuenciales_escalan_al_tercer_intento(self, make_client):
         order = await delivered_order(make_client)
         antes = stock_row(order["producto_id"])
@@ -826,7 +868,7 @@ class TestCeroReembolsos:
         response = await actor["client"].post(
             f"{RECLAMOS}/{reclamo['id']}/reembolso", headers=actor["headers"]
         )
-        assert response.status_code in (400, 405), response.text
+        assert response.status_code == 405, response.text
         assert response.json()["detail"] == MSG_CERO_REEMBOLSOS
 
     async def test_payload_que_fuerza_accion_reembolso_retorna_400_o_422(self, make_client):
@@ -853,7 +895,7 @@ class TestConsulta:
             RECLAMOS, headers=order_a["headers"]
         )
         assert listado_a.status_code == 200, listado_a.text
-        items_a = extract_list(listado_a.json())
+        items_a = assert_estructura_listado(listado_a.json())
         ids_a = {item.get("id") for item in items_a}
         assert reclamo_a["id"] in ids_a
         assert reclamo_b["id"] not in ids_a, (
@@ -864,7 +906,7 @@ class TestConsulta:
             RECLAMOS, headers=order_b["headers"]
         )
         assert listado_b.status_code == 200, listado_b.text
-        ids_b = {item.get("id") for item in extract_list(listado_b.json())}
+        ids_b = {item.get("id") for item in assert_estructura_listado(listado_b.json())}
         assert reclamo_b["id"] in ids_b
         assert reclamo_a["id"] not in ids_b
 
@@ -872,7 +914,7 @@ class TestConsulta:
         headers = await create_authenticated_headers(sin_reclamos)
         vacio = await sin_reclamos.get(RECLAMOS, headers=headers)
         assert vacio.status_code == 200, vacio.text
-        assert extract_list(vacio.json()) == [], (
+        assert assert_estructura_listado(vacio.json()) == [], (
             "Un cliente sin reclamos no debe ver reclamos de otros usuarios"
         )
 
@@ -885,14 +927,14 @@ class TestConsulta:
         admin = await admin_session(make_client)
         todos = await admin["client"].get(RECLAMOS, headers=admin["headers"])
         assert todos.status_code == 200, todos.text
-        ids = {item.get("id") for item in extract_list(todos.json())}
+        ids = {item.get("id") for item in assert_estructura_listado(todos.json())}
         assert {reclamo_a["id"], reclamo_b["id"]} <= ids
 
         aprobados = await admin["client"].get(
             RECLAMOS, params={"estado": APROBADO}, headers=admin["headers"]
         )
         assert aprobados.status_code == 200, aprobados.text
-        items_aprobados = extract_list(aprobados.json())
+        items_aprobados = assert_estructura_listado(aprobados.json())
         assert all(item.get("estado") == APROBADO for item in items_aprobados)
         ids_aprobados = {item.get("id") for item in items_aprobados}
         assert reclamo_a["id"] in ids_aprobados
@@ -904,7 +946,7 @@ class TestConsulta:
             headers=admin["headers"],
         )
         assert por_pedido.status_code == 200, por_pedido.text
-        items_pedido = extract_list(por_pedido.json())
+        items_pedido = assert_estructura_listado(por_pedido.json())
         assert items_pedido, "El filtro por pedido_numero debe devolver el reclamo"
         assert all(
             item.get("pedido_origen_numero") == order_a["numero"]
@@ -918,6 +960,52 @@ class TestConsulta:
         headers = await create_authenticated_headers(intruso)
         response = await intruso.get(f"{RECLAMOS}/{reclamo['id']}", headers=headers)
         assert_domain_404(response)
+
+
+# ---------------------------------------------------------------------------
+# Asignacion de motorizado heredada del pedido de reposicion (contrato v2).
+# ---------------------------------------------------------------------------
+class TestAsignacionMotorizado:
+    async def test_motorizado_ve_el_reclamo_al_asignarse_su_pedido_de_reposicion(
+        self, make_client
+    ):
+        order, reclamo = await reclamo_aprobado(make_client)
+        motorizado = order["motorizado"]
+        admin = order["admin"]
+
+        antes = await motorizado["client"].get(
+            RECLAMOS, headers=motorizado["headers"]
+        )
+        assert antes.status_code == 200, antes.text
+        ids_antes = {
+            item.get("id") for item in assert_estructura_listado(antes.json())
+        }
+        assert reclamo["id"] not in ids_antes, (
+            "Sin asignacion del pedido de reposicion el motorizado no debe ver el reclamo"
+        )
+
+        asignado = await admin["client"].post(
+            ASIGNACIONES,
+            json={
+                "zona_id": order["zona_id"],
+                "pedido_numeros": [reclamo["pedido_reposicion_numero"]],
+                "motorizado_id": motorizado["usuario"]["id"],
+            },
+            headers=admin["headers"],
+        )
+        assert asignado.status_code == 200, asignado.text
+
+        despues = await motorizado["client"].get(
+            RECLAMOS, headers=motorizado["headers"]
+        )
+        assert despues.status_code == 200, despues.text
+        ids_despues = {
+            item.get("id") for item in assert_estructura_listado(despues.json())
+        }
+        assert reclamo["id"] in ids_despues, (
+            "Al asignarse el pedido de reposicion, el reclamo debe quedar disponible "
+            "para el motorizado"
+        )
 
 
 # ---------------------------------------------------------------------------
