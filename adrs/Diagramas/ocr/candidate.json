@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "OCR de receta médica — Botica la Luz",
+    "locale": "es",
+    "output": "adrs/Diagramas/ocr/ocr-receta.html",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    { "id": "cliente", "type": "external", "label": "Cliente", "sublabel": "navegador" },
+    { "id": "spa", "type": "frontend", "label": "React SPA", "sublabel": "Vite" },
+    { "id": "api", "type": "backend", "label": "FastAPI", "sublabel": "recetas" },
+    { "id": "rabbitmq", "type": "messagebus", "label": "RabbitMQ", "sublabel": "cola OCR" },
+    { "id": "worker", "type": "backend", "label": "Worker OCR", "sublabel": "consumidor async" },
+    { "id": "tesseract", "type": "backend", "label": "Tesseract", "sublabel": "motor OCR" },
+    { "id": "mysql", "type": "database", "label": "MySQL", "sublabel": "stock + carrito" }
+  ],
+  "messages": [
+    { "id": "m1", "from": "cliente", "to": "spa", "y": 160, "label": "adjuntar receta (foto/PDF)" },
+    { "id": "m2", "from": "spa", "to": "api", "y": 190, "label": "POST /api/v1/recetas/ocr", "variant": "emphasis" },
+    { "id": "m3", "from": "api", "to": "rabbitmq", "y": 220, "label": "evento receta.subida", "variant": "dashed" },
+    { "id": "m4", "from": "api", "to": "spa", "y": 250, "label": "202 · procesando", "variant": "return" },
+    { "id": "m5", "from": "rabbitmq", "to": "worker", "y": 300, "label": "consume" },
+    { "id": "m6", "from": "worker", "to": "tesseract", "y": 330, "label": "extraer texto" },
+    { "id": "m7", "from": "tesseract", "to": "worker", "y": 360, "label": "componentes + cantidades", "variant": "return" },
+    { "id": "m8", "from": "worker", "to": "mysql", "y": 390, "label": "consultar stock" },
+    { "id": "m9", "from": "mysql", "to": "worker", "y": 420, "label": "stock disponible", "variant": "return", "note": "si falta stock: alerta (PA-03)" },
+    { "id": "m10", "from": "worker", "to": "mysql", "y": 495, "label": "insertar ítems + reservar stock", "variant": "emphasis" },
+    { "id": "m11", "from": "mysql", "to": "worker", "y": 525, "label": "ok", "variant": "return" },
+    { "id": "m12", "from": "worker", "to": "spa", "y": 565, "label": "carrito listo", "variant": "return", "note": "notificación en tiempo real (SSE/WebSocket)" }
+  ],
+  "activations": [
+    { "participant": "spa", "from": 185, "to": 255, "type": "frontend" },
+    { "participant": "api", "from": 185, "to": 255, "type": "backend" },
+    { "participant": "worker", "from": 295, "to": 570, "type": "backend" },
+    { "participant": "tesseract", "from": 325, "to": 365, "type": "backend" },
+    { "participant": "mysql", "from": 385, "to": 425, "type": "database" },
+    { "participant": "mysql", "from": 490, "to": 530, "type": "database" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Camino feliz", "items": ["El OCR corre en un worker asíncrono, fuera del request HTTP.", "Con stock completo, se añaden los ítems y se redirige al carrito (RF-03.1)."] },
+    { "dot": "rose", "title": "Quiebre de stock", "items": ["Si falta algún medicamento, se detiene la inserción y se alerta el faltante (RF-03.2).", "PA-03 resuelto: se descarta la inserción parcial; si falta cualquier medicamento se suspende toda la receta."] },
+    { "dot": "amber", "title": "Dato de salud", "items": ["La receta es dato de salud: se trata con retención mínima (ADR 0015).", "Tesseract puede degradarse con manuscrito: requiere validación humana ante baja confianza."] }
+  ]
+}
