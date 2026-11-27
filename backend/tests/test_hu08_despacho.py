@@ -25,7 +25,6 @@ import time
 import uuid
 
 import pytest
-import pytest_asyncio
 import pymysql
 
 # ---------------------------------------------------------------------------
@@ -93,52 +92,30 @@ def historial_url(numero: str) -> str:
 # Clientes con IP propia (evita el rate limit de auth compartido por IP).
 # El fixture solo crea clientes; ninguna llamada a BD ocurre en el fixture.
 # ---------------------------------------------------------------------------
-@pytest_asyncio.fixture
-async def make_client(app):
-    import httpx
-    from httpx import ASGITransport
+@pytest.fixture
+def make_client(app):
+    """Crea clientes httpx DENTRO del loop del test (pytest-asyncio usa loop
+    `session` para tests pero `function` para fixtures async: mezclarlos causa
+    'Future attached to a different loop')."""
 
-    creados = []
+    def _make():
+        import httpx
+        from httpx import ASGITransport
 
-    async def _make():
         host = f"hu08-{uuid.uuid4().hex}"
         transport = ASGITransport(app=app, client=(host, 50000))
-        client = httpx.AsyncClient(transport=transport, base_url="http://testserver")
-        await client.__aenter__()
-        creados.append(client)
-        return client
+        return httpx.AsyncClient(transport=transport, base_url="http://testserver")
 
-    try:
-        yield _make
-    finally:
-        for client in creados:
-            await client.__aexit__(None, None, None)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def purge_auth_queue_session(default_env):
-    """Despeja el backlog de eventos de auth de corridas anteriores una sola vez."""
-
-    async def _purge():
-        import aio_pika
-
-        connection = await aio_pika.connect_robust(
-            os.environ.get("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
-        )
-        try:
-            channel = await connection.channel()
-            queue = await channel.declare_queue(QUEUE, durable=True)
-            await queue.purge()
-        finally:
-            await connection.close()
-
-    asyncio.run(_purge())
-    yield
+    return _make
 
 
 @pytest.fixture(autouse=True)
-def reset_shared_inventory(default_env):
-    """Inventario limpio por prueba (mismo criterio que HU-05/HU-07)."""
+def reset_shared_state(default_env):
+    """Cada prueba parte de cero en carrito/pedidos/pagos/inventario.
+
+    Se conservan `usuarios` y `zonas` (seed). Asi el buzón, los conteos por
+    zona y la cola FIFO no dependen de pedidos creados por pruebas anteriores.
+    """
     connection = pymysql.connect(
         host=os.environ.get("MYSQL_HOST", "127.0.0.1"),
         port=int(os.environ.get("MYSQL_PORT", "3306")),
@@ -149,7 +126,27 @@ def reset_shared_inventory(default_env):
     )
     try:
         with connection.cursor() as cursor:
-            cursor.execute("DELETE FROM inventario_stock")
+            cursor.execute(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema = DATABASE()"
+            )
+            existentes = {row[0] for row in cursor.fetchall()}
+            cursor.execute("SET FOREIGN_KEY_CHECKS=0")
+            for table in (
+                "pedido_estado_historial",
+                "auditoria_receta_pendiente",
+                "pagos",
+                "pedido_items",
+                "pedidos",
+                "recetas",
+                "carrito_items",
+                "carritos",
+                "direcciones",
+                "inventario_stock",
+            ):
+                if table in existentes:
+                    cursor.execute(f"DELETE FROM {table}")
+            cursor.execute("SET FOREIGN_KEY_CHECKS=1")
     finally:
         connection.close()
     yield
@@ -159,18 +156,19 @@ def reset_shared_inventory(default_env):
 # Helpers de autenticacion (se invocan desde el test, en el loop correcto).
 # ---------------------------------------------------------------------------
 async def _rabbit_queue():
+    """Mismo patron estable que test_hu01_auth._rabbit_queue."""
     import aio_pika
 
-    connection = await aio_pika.connect_robust(
-        os.environ.get("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
-    )
+    url = os.environ.get("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
+    connection = await aio_pika.connect_robust(url)
     channel = await connection.channel()
     queue = await channel.declare_queue(QUEUE, durable=True)
-    return connection, queue
+    return connection, channel, queue
 
 
-async def consume_auth_event(timeout: float = 10.0) -> dict:
-    connection, queue = await _rabbit_queue()
+async def consume_activation_event(timeout: float = 10.0) -> dict:
+    """Consume un unico mensaje de `email.auth` (patron HU-01)."""
+    connection, channel, queue = await _rabbit_queue()
     try:
         async with queue.iterator(timeout=1) as iterator:
             message = await asyncio.wait_for(iterator.__anext__(), timeout=timeout)
@@ -180,43 +178,36 @@ async def consume_auth_event(timeout: float = 10.0) -> dict:
         await connection.close()
 
 
-async def create_authenticated_headers(client) -> dict[str, str]:
-    email = f"hu08.{uuid.uuid4().hex[:12]}@ejemplo.com"
-    connection, queue = await _rabbit_queue()
+async def purge_activation_queue() -> None:
+    """Purga inmediata antes de registrar (patron HU-01)."""
+    connection, channel, queue = await _rabbit_queue()
     try:
         await queue.purge()
     finally:
         await connection.close()
-    registration = await client.post(REGISTRO, json={"email": email})
-    assert registration.status_code == 200, registration.text
 
-    # El broker puede entregar eventos atrasados de otras pruebas; se prueban
-    # varios hasta encontrar uno que active Y permita iniciar sesion con este email.
-    connection, queue = await _rabbit_queue()
-    deadline = time.monotonic() + 60.0
-    try:
-        async with queue.iterator(timeout=1) as iterator:
-            while time.monotonic() < deadline:
-                try:
-                    message = await asyncio.wait_for(iterator.__anext__(), timeout=2)
-                except (StopAsyncIteration, asyncio.TimeoutError):
-                    continue
-                async with message.process():
-                    event = json.loads(message.body)
-                if event.get("payload", {}).get("email") != email:
-                    continue
-                token = event["payload"]["token"]
-                activation = await client.post(
-                    ACTIVAR, json={"token": token, "password": PASSWORD}
-                )
-                if activation.status_code != 200:
-                    continue
-                login = await client.post(LOGIN, json={"email": email, "password": PASSWORD})
-                if login.status_code == 200:
-                    return {"Authorization": f"Bearer {login.json()['access_token']}"}
-    finally:
-        await connection.close()
-    pytest.fail(f"No se pudo activar/iniciar sesion con '{email}' tras 60s de eventos de auth")
+
+async def register_and_get_token(client, email: str | None = None):
+    await purge_activation_queue()
+    email = email or f"hu08.{uuid.uuid4().hex[:12]}@ejemplo.com"
+    response = await client.post(REGISTRO, json={"email": email})
+    assert response.status_code == 200, (
+        f"Registro esperaba 200, obtuvo {response.status_code}: {response.text}"
+    )
+    event = await consume_activation_event(timeout=10.0)
+    return email, event
+
+
+async def create_authenticated_headers(client) -> dict[str, str]:
+    email, event = await register_and_get_token(client)
+    activation = await client.post(
+        ACTIVAR,
+        json={"token": event["payload"]["token"], "password": PASSWORD},
+    )
+    assert activation.status_code == 200, activation.text
+    login = await client.post(LOGIN, json={"email": email, "password": PASSWORD})
+    assert login.status_code == 200, login.text
+    return {"Authorization": f"Bearer {login.json()['access_token']}"}
 
 
 async def login_seeded(client, email: str, password: str) -> tuple[dict[str, str], dict]:
@@ -229,19 +220,19 @@ async def login_seeded(client, email: str, password: str) -> tuple[dict[str, str
 
 
 async def admin_session(make_client) -> dict:
-    client = await make_client()
+    client = make_client()
     headers, usuario = await login_seeded(client, ADMIN_EMAIL, ADMIN_PASSWORD)
     return {"client": client, "headers": headers, "usuario": usuario}
 
 
 async def motorizado_session(make_client) -> dict:
-    client = await make_client()
+    client = make_client()
     headers, usuario = await login_seeded(client, MOTORIZADO_EMAIL, MOTORIZADO_PASSWORD)
     return {"client": client, "headers": headers, "usuario": usuario}
 
 
 async def cliente_session(make_client) -> dict:
-    client = await make_client()
+    client = make_client()
     headers = await create_authenticated_headers(client)
     return {"client": client, "headers": headers}
 
@@ -372,7 +363,7 @@ async def new_order(make_client, zone_index: int = 0, quantity: int = 1) -> dict
     """
     ultimo_error = None
     for attempt in range(3):
-        client = await make_client()
+        client = make_client()
         try:
             return await create_order(client, zone_index=zone_index, quantity=quantity)
         except AssertionError as error:
@@ -453,7 +444,7 @@ class TestRBAC:
 
     @pytest.mark.parametrize("method,url,body", ENDPOINTS)
     async def test_sin_sesion_retorna_401(self, make_client, method, url, body):
-        client = await make_client()
+        client = make_client()
         response = await client.request(method, url, json=body)
         assert response.status_code == 401, response.text
 
